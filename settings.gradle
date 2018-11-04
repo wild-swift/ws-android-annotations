@@ -1,1 +1,1 @@
-include ':android-annotations', ':android-annotation-processor'
+include ':android-annotations', ':android-annotation-processor', ':testapp'

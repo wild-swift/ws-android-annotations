@@ -10,6 +10,7 @@ version = '0.1'
 dependencies {
     implementation 'name.wildswift.android:android-annotations:0.1'
 
+    implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$kotlinx_metadata_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup:kotlinpoet:0.7.0'
 }

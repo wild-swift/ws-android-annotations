@@ -2,6 +2,7 @@ package name.wildswift.lib.androidkotlinprocessor
 
 
 import com.squareup.kotlinpoet.*
+import name.wildswift.lib.androidkotlinannotations.ActivityField
 import name.wildswift.lib.androidkotlinannotations.ActivityFields
 import name.wildswift.lib.androidkotlinprocessor.utils.toScreamingCase
 import java.io.ByteArrayOutputStream
@@ -21,25 +22,10 @@ import javax.tools.Diagnostic
 /**
  * Created by swift
  */
-@SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.ActivityFields")
+@SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.ActivityFields", "name.wildswift.lib.androidkotlinannotations.ActivityField")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-class ActivityFieldsAnnotationProcessor : AbstractProcessor() {
-    val generationPath: String by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-//        val result = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-//        if (result != null) return@lazy result!!
-
-        try {
-            val sourceFile = processingEnv.filer.createSourceFile("__T")
-            val file = File(sourceFile.toUri()).parent
-            sourceFile.delete()
-            return@lazy file
-        } catch (e: Exception) {
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            e.printStackTrace(PrintStream(byteArrayOutputStream))
-            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, byteArrayOutputStream.toString())
-            throw e
-        }
-    }
+class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
+    override val tmpFileName = "__T"
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
         roundEnv.getElementsAnnotatedWith(ActivityFields::class.java).forEach {
@@ -48,19 +34,28 @@ class ActivityFieldsAnnotationProcessor : AbstractProcessor() {
                 return true
             }
             (it as? TypeElement)?.apply {
-                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(ActivityFields::class.java))
+                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(ActivityFields::class.java).value, resolveKotlinVisibility(it))
+            }
+        }
+        roundEnv.getElementsAnnotatedWith(ActivityField::class.java).forEach {
+            if (it.kind != ElementKind.CLASS) {
+                processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can be applied to class.")
+                return true
+            }
+            (it as? TypeElement)?.apply {
+                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), arrayOf(it.getAnnotation(ActivityField::class.java)), resolveKotlinVisibility(it))
             }
         }
         return true
     }
 
-    private fun writeSourceFile(className: String, pack: String, annotation: ActivityFields) {
+    private fun writeSourceFile(className: String, pack: String, annotations: Array<ActivityField>, visibilityModifier: KModifier) {
         val fileName = "_${className}Extension"
         val intentBuilderClassName = "${className}IntentBuilder"
 
         val fileBuilder = FileSpec
                 .builder(pack, fileName)
-                .addAliasedImport(ClassName("android.support.v4.app", "ActivityCompat"), "ActivityCompat")
+                .addStaticImport("android.os", "Build")
 
         val intentBuilderClassBuilder = TypeSpec
                 .classBuilder(intentBuilderClassName)
@@ -79,7 +74,11 @@ class ActivityFieldsAnnotationProcessor : AbstractProcessor() {
                         .addParameter(ParameterSpec.builder("requestCode", Int::class).build())
                         .addParameter(ParameterSpec.builder("options", ClassName("android.os", "Bundle").asNullable()).build())
                         .addCode("        if (context is Activity) {\n" +
-                                "            ActivityCompat.startActivityForResult(context, intent, requestCode, options)\n" +
+                                "            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {\n" +
+                                "                context.startActivityForResult(intent, requestCode, options)\n" +
+                                "            } else {\n" +
+                                "                context.startActivityForResult(intent, requestCode)\n" +
+                                "            }\n" +
                                 "        } else {\n" +
                                 "            context.startActivity(intent)\n" +
                                 "        }\n")
@@ -105,7 +104,7 @@ class ActivityFieldsAnnotationProcessor : AbstractProcessor() {
                         .addStatement("return this")
                         .build())
 
-        annotation.value.forEach { fieldSpec ->
+        annotations.forEach { fieldSpec ->
             try {
                 val name = fieldSpec.name
                 val getterName = "_get${name[0].toUpperCase() + name.substring(1)}"
@@ -135,6 +134,7 @@ class ActivityFieldsAnnotationProcessor : AbstractProcessor() {
 
                 fileBuilder.addProperty(PropertySpec
                         .builder("$className.${fieldSpec.name}", propertyType)
+                        .addModifiers(visibilityModifier)
                         .delegate(CodeBlock.of("name.wildswift.lib.util.ExtrasFieldLoader { this.$getterName() }" ))
                         .build())
 

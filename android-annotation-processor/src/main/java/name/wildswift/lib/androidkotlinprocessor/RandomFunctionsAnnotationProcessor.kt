@@ -2,6 +2,12 @@ package name.wildswift.lib.androidkotlinprocessor
 
 
 import com.squareup.kotlinpoet.*
+import kotlinx.metadata.ClassName
+import kotlinx.metadata.Flag
+import kotlinx.metadata.Flags
+import kotlinx.metadata.KmClassVisitor
+import kotlinx.metadata.jvm.KotlinClassHeader
+import kotlinx.metadata.jvm.KotlinClassMetadata
 import name.wildswift.lib.androidkotlinannotations.RandomFunction
 import name.wildswift.lib.androidkotlinannotations.RandomFunctionType
 import name.wildswift.lib.androidkotlinannotations.RandomFunctions
@@ -14,9 +20,11 @@ import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
 import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.AnnotationValue
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.MirroredTypeException
+import javax.lang.model.util.SimpleAnnotationValueVisitor7
 import javax.tools.Diagnostic
 
 
@@ -25,23 +33,8 @@ import javax.tools.Diagnostic
  */
 @SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.RandomFunctions", "name.wildswift.lib.androidkotlinannotations.RandomFunction")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-class RandomFunctionsAnnotationProcessor : AbstractProcessor() {
-    val generationPath: String by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        //        val result = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-//        if (result != null) return@lazy result!!
-
-        try {
-            val sourceFile = processingEnv.filer.createSourceFile("__R")
-            val file = File(sourceFile.toUri()).parent
-            sourceFile.delete()
-            return@lazy file
-        } catch (e: Exception) {
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            e.printStackTrace(PrintStream(byteArrayOutputStream))
-            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, byteArrayOutputStream.toString())
-            throw e
-        }
-    }
+class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
+    override val tmpFileName = "__R"
 
     private val randomizer by lazy { Random() }
 
@@ -52,7 +45,7 @@ class RandomFunctionsAnnotationProcessor : AbstractProcessor() {
                 return true
             }
             (it as? TypeElement)?.apply {
-                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(RandomFunctions::class.java).value)
+                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(RandomFunctions::class.java).value, resolveKotlinVisibility(it))
             }
         }
         roundEnv.getElementsAnnotatedWith(RandomFunction::class.java).forEach {
@@ -61,13 +54,13 @@ class RandomFunctionsAnnotationProcessor : AbstractProcessor() {
                 return true
             }
             (it as? TypeElement)?.apply {
-                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), arrayOf(it.getAnnotation(RandomFunction::class.java)))
+                writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), arrayOf(it.getAnnotation(RandomFunction::class.java)), resolveKotlinVisibility(it))
             }
         }
         return true
     }
 
-    private fun writeSourceFile(className: String, pack: String, annotations: Array<RandomFunction>) {
+    private fun writeSourceFile(className: String, pack: String, annotations: Array<RandomFunction>, visibilityModifier: KModifier) {
         val fileName = "_${className}Randomizer"
 
         val fileBuilder = FileSpec
@@ -107,6 +100,7 @@ class RandomFunctionsAnnotationProcessor : AbstractProcessor() {
 
                     funSpec.receiver(ClassName(pack, className))
                             .returns(Boolean::class.java)
+                            .addModifiers(visibilityModifier)
                             .addModifiers(KModifier.INLINE)
                             .addStatement("return $selectedFunction(${annotation.parameters.joinToString { it.name }})")
 

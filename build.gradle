@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.2.51'
+    ext.kotlinx_metadata_version = '0.0.4'
     repositories {
         google()
         jcenter()
@@ -18,6 +19,7 @@ allprojects {
         jcenter()
         mavenCentral()
         maven { url 'https://dl.bintray.com/wildswift/general' }
+        maven { url "https://kotlin.bintray.com/kotlinx/" }
     }
 }
 
