@@ -5,10 +5,10 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'name.wildswift.android'
-version = '0.1'
+version = '0.2'
 
 dependencies {
-    implementation 'name.wildswift.android:android-annotations:0.1'
+    implementation 'name.wildswift.android:android-annotations:0.2'
 
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$kotlinx_metadata_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -56,10 +56,10 @@ bintray {
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/wild-swift/ws-android-annotations.git'
         version {
-            name = '0.1'
+            name = '0.2'
             desc = 'First alpha version'
             released  = new Date()
-            vcsTag = '0.1'
+            vcsTag = '0.2'
         }
     }
 }
