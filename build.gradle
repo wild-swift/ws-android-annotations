@@ -1,10 +1,11 @@
 buildscript {
     ext.kotlin_version = '1.2.51'
     ext.kotlinx_metadata_version = '0.0.4'
+    ext.publish_version = '0.2'
+    ext.dep_version = '0.2'
     repositories {
         google()
         jcenter()
-        maven { url 'https://maven.fabric.io/public' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.3'

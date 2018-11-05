@@ -18,9 +18,9 @@ targetCompatibility = "1.7"
 publishing {
     publications {
         Production(MavenPublication) {
-            artifact("$buildDir/libs/android-annotations-${this.version}.jar")
+            artifact("$buildDir/libs/android-annotations-rx-${this.version}.jar")
             groupId this.group
-            artifactId 'android-annotations'
+            artifactId 'android-annotations-rx'
             version this.version
 
             pom.withXml {
@@ -47,7 +47,7 @@ bintray {
     publications = ['Production']
     pkg {
         repo = 'general'
-        name = 'android-annotations'
+        name = 'android-annotations-rx'
         licenses = ['Apache-2.0']
         publish = true
         publicDownloadNumbers = true
