@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("UNUSED_PARAMETER", "unused")
+package name.wildswift.lib.androidkotlinannotations;
 
-package name.wildswift.testapp
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Created by swift
  */
-fun random1(content: Int): Boolean = false
-fun random2(content: Int): Boolean = false
-fun random3(content: Int): Boolean = false
-fun random4(content: Int): Boolean = false
-fun random5(content: Int): Boolean = false
-fun random6(content: Int): Boolean = false
-fun random7(content: Int): Boolean = false
-fun random8(content: Int): Boolean = false
-fun random9(content: Int): Boolean = false
-fun random10(content: Int): Boolean = false
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.TYPE)
+public @interface ViewWithModel {
+    ViewField[] fields();
+    int layoutResource() default 0;
+    boolean useGoogleArch() default true;
+
+}

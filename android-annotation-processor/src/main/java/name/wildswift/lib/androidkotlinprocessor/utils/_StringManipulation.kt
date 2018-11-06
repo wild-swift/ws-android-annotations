@@ -30,3 +30,15 @@ fun String.toScreamingCase() = this
             while (result.startsWith("_")) result = result.substring(1)
             result
         }
+
+fun String.toViewResourceName() = this
+        .let {
+            val index = it.indexOf("View")
+            if (index >= 0) {
+                "View${it.substring(0, index)}${it.substring(index + 4)}"
+            } else {
+                "View$it"
+            }
+        }
+        .toScreamingCase()
+        .toLowerCase()

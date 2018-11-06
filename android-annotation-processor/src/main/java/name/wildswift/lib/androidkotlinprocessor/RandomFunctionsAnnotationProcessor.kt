@@ -47,7 +47,7 @@ import javax.tools.Diagnostic
  * Created by swift
  */
 @SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.RandomFunctions", "name.wildswift.lib.androidkotlinannotations.RandomFunction")
-@SupportedSourceVersion(SourceVersion.RELEASE_7)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
     override val tmpFileName = "__R"
 
@@ -57,7 +57,7 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
         roundEnv.getElementsAnnotatedWith(RandomFunctions::class.java).forEach {
             if (it.kind != ElementKind.CLASS) {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can be applied to class.")
-                return true
+                throw IllegalArgumentException()
             }
             (it as? TypeElement)?.apply {
                 writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(RandomFunctions::class.java).value, resolveKotlinVisibility(it))
@@ -66,7 +66,7 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
         roundEnv.getElementsAnnotatedWith(RandomFunction::class.java).forEach {
             if (it.kind != ElementKind.CLASS) {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can be applied to class.")
-                return true
+                throw IllegalArgumentException()
             }
             (it as? TypeElement)?.apply {
                 writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), arrayOf(it.getAnnotation(RandomFunction::class.java)), resolveKotlinVisibility(it))
@@ -81,13 +81,17 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
         val fileBuilder = FileSpec
                 .builder(pack, fileName)
 
+        fileBuilder.addAnnotation(AnnotationSpec.builder(Suppress::class.asTypeName())
+                .addMember("\"NOTHING_TO_INLINE\"")
+                .build())
+
         annotations.forEach { annotation ->
             if (annotation.dictionary.isEmpty()) throw IllegalArgumentException("Dictionary can't be empty")
             annotation.dictionary.forEach {
                 val importPack = it.split("\\.").let { it.subList(0, it.size - 1) }.fold(StringBuilder()) { cur, new -> if (cur.isNotEmpty()) cur.append(".").append(new) else cur.append(new) }.toString()
                 val importName = it.split("\\.").last()
                 if (importPack.isNotEmpty()) {
-                    fileBuilder.addStaticImport(importPack, importName)
+                    fileBuilder.addImport(importPack, importName)
                 }
             }
             if (annotation.type == RandomFunctionType.boolCheck) {
@@ -106,7 +110,7 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
                                 } catch (mte: MirroredTypeException) {
                                     mte.typeMirror.asTypeName()
                                 }
-                                        .let { if (paramSpec.nullable) it.asNullable() else it.asNonNullable() }
+                                        .let { if (paramSpec.nullable) it.asNullable() else it.asNonNull() }
 
                         funSpec.addParameter(paramSpec.name, type)
                     }

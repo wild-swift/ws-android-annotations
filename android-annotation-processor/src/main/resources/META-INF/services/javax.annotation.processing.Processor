@@ -1,2 +1,3 @@
 name.wildswift.lib.androidkotlinprocessor.ActivityFieldsAnnotationProcessor
 name.wildswift.lib.androidkotlinprocessor.RandomFunctionsAnnotationProcessor
+name.wildswift.lib.androidkotlinprocessor.ViewWithModelAnnotationProcessor

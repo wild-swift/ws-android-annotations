@@ -26,6 +26,13 @@ android {
 
 }
 
+kapt {
+    arguments {
+//        arg("use.google.arch", "false")
+        arg("application.id", android.defaultConfig.applicationId)
+    }
+}
+
 dependencies {
     kapt project(":android-annotation-processor")
 

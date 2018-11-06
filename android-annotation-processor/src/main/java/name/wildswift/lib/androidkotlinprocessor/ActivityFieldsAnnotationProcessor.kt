@@ -38,7 +38,7 @@ import javax.tools.Diagnostic
  * Created by swift
  */
 @SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.ActivityFields", "name.wildswift.lib.androidkotlinannotations.ActivityField")
-@SupportedSourceVersion(SourceVersion.RELEASE_7)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
     override val tmpFileName = "__T"
 
@@ -46,7 +46,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
         roundEnv.getElementsAnnotatedWith(ActivityFields::class.java).forEach {
             if (it.kind != ElementKind.CLASS) {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can be applied to class.")
-                return true
+                throw IllegalArgumentException()
             }
             (it as? TypeElement)?.apply {
                 writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(ActivityFields::class.java).value, resolveKotlinVisibility(it))
@@ -55,7 +55,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
         roundEnv.getElementsAnnotatedWith(ActivityField::class.java).forEach {
             if (it.kind != ElementKind.CLASS) {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Can be applied to class.")
-                return true
+                throw IllegalArgumentException()
             }
             (it as? TypeElement)?.apply {
                 writeSourceFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), arrayOf(it.getAnnotation(ActivityField::class.java)), resolveKotlinVisibility(it))
@@ -70,7 +70,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
 
         val fileBuilder = FileSpec
                 .builder(pack, fileName)
-                .addStaticImport("android.os", "Build")
+                .addImport("android.os", "Build")
 
         val intentBuilderClassBuilder = TypeSpec
                 .classBuilder(intentBuilderClassName)
@@ -144,11 +144,12 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .addModifiers(KModifier.PRIVATE)
                         .receiver(ClassName(pack, className))
                         .returns(propertyType)
-                        .addStatement("return intent.extras?.get($extraName) as${if (fieldSpec.nullable) "?" else ""} ${propertyType.asNonNullable().simpleName()}")
+                        .addStatement("return intent.extras?.get($extraName) as${if (fieldSpec.nullable) "?" else ""} ${propertyType.asNonNull().simpleName}")
                         .build())
 
                 fileBuilder.addProperty(PropertySpec
-                        .builder("$className.${fieldSpec.name}", propertyType)
+                        .builder(fieldSpec.name, propertyType)
+                        .receiver(ClassName(pack, className))
                         .addModifiers(visibilityModifier)
                         .delegate(CodeBlock.of("name.wildswift.lib.util.ExtrasFieldLoader { this.$getterName() }" ))
                         .build())

@@ -22,6 +22,7 @@ import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClassVisitor
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
+import name.wildswift.lib.androidkotlinannotations.ViewWithModel
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
