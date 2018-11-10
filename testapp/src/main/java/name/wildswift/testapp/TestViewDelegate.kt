@@ -15,8 +15,6 @@
  */
 package name.wildswift.testapp
 
-import android.content.Context
-import android.util.AttributeSet
 import android.widget.FrameLayout
 import name.wildswift.android.kannotations.AttributeType
 import name.wildswift.android.kannotations.ViewAttribute

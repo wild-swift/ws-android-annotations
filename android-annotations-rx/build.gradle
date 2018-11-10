@@ -71,7 +71,7 @@ bintray {
         version {
             name = publish_version
             desc = 'First alpha version'
-            released  = new Date()
+            released = new Date()
             vcsTag = publish_version
         }
     }

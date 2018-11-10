@@ -22,19 +22,19 @@ import name.wildswift.android.kannotations.AttributeType.*
 /**
  * Created by swift
  */
-fun AttributeType.fieldClass() = when(this) {
+fun AttributeType.fieldClass() = when (this) {
     string -> String::class
     color -> Int::class
     enum_ -> Int::class
 }
 
-fun AttributeType.initValue() = when(this) {
+fun AttributeType.initValue() = when (this) {
     string -> "\"\""
     color -> "0xFFFFFFFF.toInt()"
     enum_ -> "0"
 }
 
-fun AttributeType.loadCode(indexRef: String) = when(this) {
+fun AttributeType.loadCode(indexRef: String) = when (this) {
     string -> "getString($indexRef)"
     color -> "getColor($indexRef, ${initValue()})"
     enum_ -> "getInteger($indexRef, 0)"

@@ -27,8 +27,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface RandomFunction {
     String perfix() default "random";
+
     int count() default 1;
+
     RandomFunctionType type() default RandomFunctionType.boolCheck;
+
     RandomFunctionParameter[] parameters() default {};
+
     String[] dictionary();
 }

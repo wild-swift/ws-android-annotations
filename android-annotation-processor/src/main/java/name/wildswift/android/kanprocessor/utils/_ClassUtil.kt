@@ -22,7 +22,7 @@ import kotlin.reflect.KClass
 /**
  * Created by swift
  */
-fun <T: Annotation> T.safeGetType(run: T.() -> KClass<*>) = try {
+fun <T : Annotation> T.safeGetType(run: T.() -> KClass<*>) = try {
     this.run().asTypeName()
 } catch (mte: MirroredTypeException) {
     mte.typeMirror.asTypeName()

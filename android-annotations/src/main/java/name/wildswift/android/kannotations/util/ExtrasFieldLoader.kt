@@ -26,7 +26,7 @@ import kotlin.reflect.KProperty
 private object UNINITIALIZED_VALUE
 
 @Suppress("UNCHECKED_CAST")
-class ExtrasFieldLoader<T, out U>(private val loader : T.() -> U): ReadOnlyProperty<T, U> {
+class ExtrasFieldLoader<T, out U>(private val loader: T.() -> U) : ReadOnlyProperty<T, U> {
     private var value: Any = UNINITIALIZED_VALUE
     private var lastThis: WeakReference<T?> = WeakReference(null)
 

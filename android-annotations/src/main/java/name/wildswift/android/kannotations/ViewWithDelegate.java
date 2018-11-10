@@ -27,7 +27,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ViewWithDelegate {
     String name() default "";
+
     Class parent();
+
     int layoutResource() default 0;
+
     ViewAttribute[] attrs() default {};
 }

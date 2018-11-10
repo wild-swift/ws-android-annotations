@@ -26,6 +26,8 @@ import java.lang.annotation.Target;
 @Target({})
 public @interface RandomFunctionParameter {
     String name();
+
     Class type();
+
     boolean nullable() default false;
 }

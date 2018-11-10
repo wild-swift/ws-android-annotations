@@ -20,6 +20,8 @@ package name.wildswift.android.kannotations;
  */
 public @interface ViewField {
     int id() default 0;
+
     ViewProperty property();
+
     String name();
 }

@@ -16,11 +16,11 @@
 
 <resources>
     <declare-styleable name="TestView">
-        <attr name="visibleColor" format="color"/>
+        <attr name="visibleColor" format="color" />
         <attr name="textIn" format="enum">
-            <enum name="ttt1" value="1"/>
-            <enum name="ttt2" value="2"/>
-            <enum name="ttt3" value="3"/>
+            <enum name="ttt1" value="1" />
+            <enum name="ttt2" value="2" />
+            <enum name="ttt3" value="3" />
         </attr>
     </declare-styleable>
 </resources>

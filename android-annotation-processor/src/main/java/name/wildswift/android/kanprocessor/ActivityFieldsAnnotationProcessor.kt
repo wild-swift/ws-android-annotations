@@ -151,7 +151,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .builder(fieldSpec.name, propertyType)
                         .receiver(ClassName(pack, className))
                         .addModifiers(visibilityModifier)
-                        .delegate(CodeBlock.of("ExtrasFieldLoader { this.$getterName() }" ))
+                        .delegate(CodeBlock.of("ExtrasFieldLoader { this.$getterName() }"))
                         .build())
 
                 intentBuilderClassBuilder.addFunction(FunSpec

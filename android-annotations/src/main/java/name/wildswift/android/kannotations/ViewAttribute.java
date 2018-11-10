@@ -20,6 +20,8 @@ package name.wildswift.android.kannotations;
  */
 public @interface ViewAttribute {
     int reference();
+
     AttributeType type();
+
     String fieldName() default "";
 }
