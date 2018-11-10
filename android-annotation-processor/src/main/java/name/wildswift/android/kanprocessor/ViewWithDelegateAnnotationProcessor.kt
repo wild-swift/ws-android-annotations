@@ -69,7 +69,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
             if ((it as? TypeElement)?.superclass?.accept<Boolean, Any?>(checkViewDelegateVisitor, null) != true) {
                 processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "Class is not implements ${ViewDelegate::class.java.name}.")
                 throw IllegalArgumentException("ViewWithDelegate may be used only with class that implements ${ViewDelegate::class.java.name}. " +
-                        "Can't apply to ${(it as? QualifiedNameable)?.qualifiedName ?: it.simpleName}")
+                        "Can't apply to ${(it as? QualifiedNameable)?.qualifiedName
+                                ?: it.simpleName}")
             }
             (it as? TypeElement)?.apply {
                 writeExtensionsFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(ViewWithDelegate::class.java), resolveKotlinVisibility(it), envConstants)
@@ -98,7 +99,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val viewClass = TypeSpec
                 .classBuilder(ClassName(pack, viewClassName))
                 .addModifiers(visibilityModifier)
-                .superclass(annotation.safeGetType { parent } )
+                .superclass(annotation.safeGetType { parent })
                 .addViewConstructors {
                     if (annotation.attrs.isNotEmpty() && it > 1) {
                         addStatement("setAttrs(context, attrs)")
@@ -118,7 +119,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         viewClass.addProperty(PropertySpec.builder("delegate", delegateClass).addModifiers(KModifier.PRIVATE).initializer("%T()", delegateClass).build())
 
         if (annotation.attrs.isNotEmpty()) {
-            envConstants.packageAttrTypeElement ?: throw IllegalArgumentException("Can't find R.attr class. Is \"${envConstants.appId}\" correct package name?")
+            envConstants.packageAttrTypeElement
+                    ?: throw IllegalArgumentException("Can't find R.attr class. Is \"${envConstants.appId}\" correct package name?")
             val setAttrsFun = FunSpec
                     .builder("setAttrs")
                     .addModifiers(KModifier.PRIVATE)
