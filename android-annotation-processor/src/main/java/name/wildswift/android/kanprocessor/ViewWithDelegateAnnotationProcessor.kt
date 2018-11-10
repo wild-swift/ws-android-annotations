@@ -18,9 +18,7 @@ package name.wildswift.android.kanprocessor
 import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ViewWithDelegate
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
-import name.wildswift.android.kanprocessor.utils.addViewConstructors
-import name.wildswift.android.kanprocessor.utils.safeGetType
-import name.wildswift.android.kanprocessor.utils.toViewResourceName
+import name.wildswift.android.kanprocessor.utils.*
 import java.io.File
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
@@ -81,12 +79,6 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
     }
 
     private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants) {
-        val fileName = "_${className}Ext"
-
-        val fileBuilder = FileSpec
-                .builder(pack, fileName)
-
-
         val layoutName = annotation.layoutResource
                 .let { if (it != 0) resolveIntFieldName(envConstants.packageLayoutsTypeElement, it) else className.toViewResourceName() }
                 ?: throw IllegalArgumentException("Can't resolve name for ${annotation.layoutResource} in class ${envConstants.packageLayoutsTypeElement.qualifiedName}")
@@ -95,9 +87,13 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                 ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $pack.$className")
 
-        fileBuilder.addImport(envConstants.appId, "R")
-        fileBuilder.addImport("android.view.View", "inflate")
-        fileBuilder.addImport("kotlinx.android.synthetic.main.$layoutName", "view.*")
+        val viewClassFile = FileSpec
+                .builder(pack, viewClassName)
+
+
+        viewClassFile.addImport(envConstants.appId, "R")
+        viewClassFile.addImport("android.view.View", "inflate")
+        viewClassFile.addImport("kotlinx.android.synthetic.main.$layoutName", "view.*")
 
         val viewClass = TypeSpec
                 .classBuilder(ClassName(pack, viewClassName))
@@ -114,30 +110,39 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         viewClass.addInitializerBlock(
                 CodeBlock.builder()
                         .addStatement("inflate(context, R.layout.$layoutName, this)")
-                        .addStatement("inflate(context, R.layout.$layoutName, this)")
+                        .addStatement("delegate.setupView(this)")
                         .build()
         )
 
-        if (annotation.attrs.isNotEmpty()) {
+        val delegateClass = ClassName(pack, className)
+        viewClass.addProperty(PropertySpec.builder("delegate", delegateClass).addModifiers(KModifier.PRIVATE).initializer("%T()", delegateClass).build())
 
+        if (annotation.attrs.isNotEmpty()) {
+            envConstants.packageAttrTypeElement ?: throw IllegalArgumentException("Can't find R.attr class. Is \"${envConstants.appId}\" correct package name?")
             val setAttrsFun = FunSpec
                     .builder("setAttrs")
                     .addModifiers(KModifier.PRIVATE)
-                    .addParameter("context", ClassName("android.content", "Context"))
+                    .addParameter("context", contextClass)
                     .addParameter("attrs", ClassName("android.util", "AttributeSet").asNullable())
                     .addStatement("if (attrs == null) return")
                     .addStatement("val styleAttrs = context.obtainStyledAttributes(attrs, R.styleable.$viewClassName)")
-                    .addStatement("styleAttrs.recycle()")
-                    .build()
 
+            annotation.attrs.forEach {
+                val fieldName = resolveIntFieldName(envConstants.packageAttrTypeElement, it.reference)
+                        ?: throw IllegalArgumentException("Can't resolve name for ${it.reference} in class ${envConstants.packageAttrTypeElement.qualifiedName}")
+                val propertyName = if (it.fieldName.isBlank()) fieldName else it.fieldName
+                viewClass.addProperty(PropertySpec.builder(propertyName, it.type.fieldClass()).mutable().initializer(it.type.initValue()).build())
+                setAttrsFun.addStatement("$propertyName = styleAttrs.${it.type.loadCode("R.styleable.${viewClassName}_$propertyName")}")
+            }
 
-            viewClass.addFunction(setAttrsFun)
+            setAttrsFun.addStatement("styleAttrs.recycle()")
+            viewClass.addFunction(setAttrsFun.build())
 
         }
 
-        fileBuilder.addType(viewClass.build())
+        viewClassFile.addType(viewClass.build())
 
-        val file = fileBuilder.build()
+        val file = viewClassFile.build()
 
         file.writeTo(File(generationPath))
     }
