@@ -39,7 +39,6 @@ import javax.tools.Diagnostic
  */
 @SupportedAnnotationTypes("name.wildswift.android.kannotations.ViewWithDelegate")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-
 class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
     override val tmpFileName: String = "__V"
 
