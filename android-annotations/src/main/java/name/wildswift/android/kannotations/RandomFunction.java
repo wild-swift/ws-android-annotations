@@ -13,11 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kannotations;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Created by swift
  */
-public enum RandomFunctionType {
-    boolCheck
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.TYPE)
+public @interface RandomFunction {
+    String perfix() default "random";
+    int count() default 1;
+    RandomFunctionType type() default RandomFunctionType.boolCheck;
+    RandomFunctionParameter[] parameters() default {};
+    String[] dictionary();
 }

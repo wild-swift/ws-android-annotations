@@ -13,21 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kannotations;
 
 /**
  * Created by swift
  */
-public enum ViewProperty {
-    text(String.class), visibility(int.class);
-
-    private final Class type;
-
-    ViewProperty(Class type) {
-        this.type = type;
-    }
-
-    public Class getType() {
-        return type;
-    }
+public enum RandomFunctionType {
+    boolCheck
 }

@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinprocessor
+package name.wildswift.android.kanprocessor
 
 
 import com.squareup.kotlinpoet.*
-import name.wildswift.lib.androidkotlinannotations.ActivityField
-import name.wildswift.lib.androidkotlinannotations.ActivityFields
-import name.wildswift.lib.androidkotlinprocessor.utils.toScreamingCase
+import name.wildswift.android.kannotations.ActivityField
+import name.wildswift.android.kannotations.ActivityFields
+import name.wildswift.android.kanprocessor.utils.toScreamingCase
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
-import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
 import javax.annotation.processing.SupportedSourceVersion
@@ -37,7 +36,7 @@ import javax.tools.Diagnostic
 /**
  * Created by swift
  */
-@SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.ActivityFields", "name.wildswift.lib.androidkotlinannotations.ActivityField")
+@SupportedAnnotationTypes("name.wildswift.android.kannotations.ActivityFields", "name.wildswift.android.kannotations.ActivityField")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
     override val tmpFileName = "__T"
@@ -71,6 +70,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
         val fileBuilder = FileSpec
                 .builder(pack, fileName)
                 .addImport("android.os", "Build")
+                .addImport("name.wildswift.android.kannotations.util", "ExtrasFieldLoader")
 
         val intentBuilderClassBuilder = TypeSpec
                 .classBuilder(intentBuilderClassName)
@@ -151,7 +151,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .builder(fieldSpec.name, propertyType)
                         .receiver(ClassName(pack, className))
                         .addModifiers(visibilityModifier)
-                        .delegate(CodeBlock.of("name.wildswift.lib.util.ExtrasFieldLoader { this.$getterName() }" ))
+                        .delegate(CodeBlock.of("ExtrasFieldLoader { this.$getterName() }" ))
                         .build())
 
                 intentBuilderClassBuilder.addFunction(FunSpec

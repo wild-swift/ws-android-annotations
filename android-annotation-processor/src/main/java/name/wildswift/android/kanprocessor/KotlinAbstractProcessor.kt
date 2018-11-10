@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinprocessor
+package name.wildswift.android.kanprocessor
 
 import com.squareup.kotlinpoet.KModifier
 import kotlinx.metadata.ClassName
@@ -22,7 +22,6 @@ import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClassVisitor
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
-import name.wildswift.lib.androidkotlinannotations.ViewWithModel
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream

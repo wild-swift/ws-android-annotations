@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kannotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,6 +25,9 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface ActivityFields {
-    ActivityField[] value();
+public @interface ViewWithDelegate {
+    String name() default "";
+    Class parent();
+    int layoutResource() default 0;
+    ViewAttribute[] attrs() default {};
 }

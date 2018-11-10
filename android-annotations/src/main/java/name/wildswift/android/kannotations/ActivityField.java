@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinprocessor
-
-import javax.lang.model.element.TypeElement
+package name.wildswift.android.kannotations;
 
 /**
  * Created by swift
  */
-data class ProcessingEnvConstants(
-        val appId: String,
-        val packageLayoutsTypeElement: TypeElement,
-        val packageIdsTypeElement: TypeElement
-)
+
+public @interface ActivityField {
+    String name();
+
+    Class type();
+
+    boolean nullable() default false;
+}

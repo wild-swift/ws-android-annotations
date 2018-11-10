@@ -17,16 +17,16 @@ package name.wildswift.testapp
 
 import android.app.Activity
 import android.os.Bundle
-import name.wildswift.lib.androidkotlinannotations.ActivityField
-import name.wildswift.lib.androidkotlinannotations.RandomFunction
-import name.wildswift.lib.androidkotlinannotations.RandomFunctionParameter
+import name.wildswift.android.kannotations.ActivityField
+import name.wildswift.android.kannotations.RandomFunction
+import name.wildswift.android.kannotations.RandomFunctionParameter
 
 @ActivityField(
         name = "id", type = Long::class, nullable = true
 )
 @RandomFunction(
         parameters = [
-            RandomFunctionParameter(name = "context", type = Int::class, nullable = false)
+            (RandomFunctionParameter(name = "context", type = Int::class, nullable = false))
         ],
         dictionary = [
             "name.wildswift.testapp.random1",
@@ -46,5 +46,6 @@ internal class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        this.random1(123)
     }
 }

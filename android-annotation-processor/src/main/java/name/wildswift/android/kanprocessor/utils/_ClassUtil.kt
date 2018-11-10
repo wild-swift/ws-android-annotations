@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kanprocessor.utils
+
+import com.squareup.kotlinpoet.asTypeName
+import javax.lang.model.type.MirroredTypeException
+import kotlin.reflect.KClass
 
 /**
  * Created by swift
  */
-
-public @interface ActivityField {
-    String name();
-
-    Class type();
-
-    boolean nullable() default false;
+fun <T: Annotation> T.safeGetType(run: T.() -> KClass<*>) = try {
+    this.run().asTypeName()
+} catch (mte: MirroredTypeException) {
+    mte.typeMirror.asTypeName()
 }

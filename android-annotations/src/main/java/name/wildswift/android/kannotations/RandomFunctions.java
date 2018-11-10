@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kannotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -23,9 +24,7 @@ import java.lang.annotation.Target;
  * Created by swift
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({})
-public @interface RandomFunctionParameter {
-    String name();
-    Class type();
-    boolean nullable() default false;
+@Target(ElementType.TYPE)
+public @interface RandomFunctions {
+    RandomFunction[] value();
 }

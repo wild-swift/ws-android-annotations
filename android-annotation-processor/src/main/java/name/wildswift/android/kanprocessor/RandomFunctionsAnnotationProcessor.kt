@@ -13,40 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinprocessor
+package name.wildswift.android.kanprocessor
 
 
 import com.squareup.kotlinpoet.*
-import kotlinx.metadata.ClassName
-import kotlinx.metadata.Flag
-import kotlinx.metadata.Flags
-import kotlinx.metadata.KmClassVisitor
-import kotlinx.metadata.jvm.KotlinClassHeader
-import kotlinx.metadata.jvm.KotlinClassMetadata
-import name.wildswift.lib.androidkotlinannotations.RandomFunction
-import name.wildswift.lib.androidkotlinannotations.RandomFunctionType
-import name.wildswift.lib.androidkotlinannotations.RandomFunctions
-import java.io.ByteArrayOutputStream
+import name.wildswift.android.kannotations.RandomFunction
+import name.wildswift.android.kannotations.RandomFunctionType
+import name.wildswift.android.kannotations.RandomFunctions
 import java.io.File
-import java.io.PrintStream
 import java.util.*
-import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
 import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.AnnotationValue
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.MirroredTypeException
-import javax.lang.model.util.SimpleAnnotationValueVisitor7
 import javax.tools.Diagnostic
 
 
 /**
  * Created by swift
  */
-@SupportedAnnotationTypes("name.wildswift.lib.androidkotlinannotations.RandomFunctions", "name.wildswift.lib.androidkotlinannotations.RandomFunction")
+@SupportedAnnotationTypes("name.wildswift.android.kannotations.RandomFunctions", "name.wildswift.android.kannotations.RandomFunction")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
     override val tmpFileName = "__R"

@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.lib.androidkotlinannotations;
+package name.wildswift.android.kannotations;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Created by swift
  */
-public @interface ViewField {
-    int id() default 0;
-    ViewProperty property();
+@Retention(RetentionPolicy.SOURCE)
+@Target({})
+public @interface RandomFunctionParameter {
     String name();
+    Class type();
+    boolean nullable() default false;
 }
