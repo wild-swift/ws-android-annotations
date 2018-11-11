@@ -13,11 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.android.kannotations;
+
+package name.wildswift.android.kanprocessor.utils
+
+import name.wildswift.android.kannotations.ViewField
+import name.wildswift.android.kannotations.ViewProperty
 
 /**
  * Created by swift
  */
-public enum ViewProperty {
-    none, text, visibility, textColor, checked
-}
+fun ViewField.resolveSetter(field: String) =
+        if (property != ViewProperty.none) {
+            when (property) {
+                ViewProperty.none -> ""
+                ViewProperty.text -> "setText($field)"
+                ViewProperty.visibility -> "visibility = $field"
+                ViewProperty.textColor -> "setTextColor($field)"
+                ViewProperty.checked -> "isChecked = $field"
+            }
+        } else {
+            ""
+        }

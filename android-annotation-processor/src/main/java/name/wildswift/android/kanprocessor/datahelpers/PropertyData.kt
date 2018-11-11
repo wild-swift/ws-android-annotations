@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.android.kannotations;
+
+package name.wildswift.android.kanprocessor.datahelpers
+
+import com.squareup.kotlinpoet.TypeName
+
 
 /**
  * Created by swift
  */
-public enum ViewProperty {
-    none, text, visibility, textColor, checked
-}
+data class PropertyData(
+        val name: String,
+        val type: TypeName,
+        val defaultValue: String
+)

@@ -20,6 +20,14 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Created by swift
  */
-public class ViewDelegate<S> {
-    public void setupView(@NotNull S view) { }
+public class ViewDelegate<V, VM> {
+    public void setupView(@NotNull V view) {
+    }
+
+    public VM validateStateForNewInput(@NotNull VM data) {
+        return data;
+    }
+
+    public void onNewInternalState(@NotNull V view, @NotNull VM data) {
+    }
 }

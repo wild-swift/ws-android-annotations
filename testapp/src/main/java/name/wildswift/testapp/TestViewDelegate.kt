@@ -15,10 +15,9 @@
  */
 package name.wildswift.testapp
 
+import android.view.View
 import android.widget.FrameLayout
-import name.wildswift.android.kannotations.AttributeType
-import name.wildswift.android.kannotations.ViewAttribute
-import name.wildswift.android.kannotations.ViewWithDelegate
+import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 
 /**
@@ -30,19 +29,24 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
         attrs = [
             ViewAttribute(reference = R.attr.visibleColor, type = AttributeType.color),
             ViewAttribute(reference = R.attr.textIn, type = AttributeType.enum_)
+        ],
+        fields = [
+            ViewField(childId = R.id.vtLabel, property = ViewProperty.text, name = "label"),
+            ViewField(childId = R.id.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
+            ViewField(childId = R.id.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
+            ViewField(childId = R.id.vtCheck, property = ViewProperty.checked, name = "check")
         ]
-//        fields = [
-//            ViewField(id = R.id.vtLabel, property = ViewProperty.text, name = "label"),
-//            ViewField(id = R.id.vtLabel, property = ViewProperty.visibility, name = "visible"),
-//            ViewField(id = R.id.vtLabel, property = ViewProperty.textColor, name = "color"),
-//            ViewField(id = R.id.vtCheck, property = ViewProperty.checked, name = "check")
-//        ]
 )
-class TestViewDelegate : ViewDelegate<TestView>() {
+class TestViewDelegate : ViewDelegate<TestView, TestViewIntState>() {
     override fun setupView(view: TestView) {
 
     }
-//    private var internalState = TestInternalState()
+
+    override fun validateStateForNewInput(data: TestViewIntState): TestViewIntState {
+        return data.copy(visible = if (data.check) View.VISIBLE else View.INVISIBLE)
+    }
+
+    //    private var internalState = TestInternalState()
 //
 //    var model: TestConfigModel = TestConfigModel()
 //        set(value) {

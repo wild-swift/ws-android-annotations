@@ -33,4 +33,6 @@ public @interface ViewWithDelegate {
     int layoutResource() default 0;
 
     ViewAttribute[] attrs() default {};
+
+    ViewField[] fields() default {};
 }
