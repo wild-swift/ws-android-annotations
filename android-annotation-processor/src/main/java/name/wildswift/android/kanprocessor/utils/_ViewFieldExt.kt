@@ -16,6 +16,7 @@
 
 package name.wildswift.android.kanprocessor.utils
 
+import com.squareup.kotlinpoet.ClassName
 import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
 
@@ -32,5 +33,17 @@ fun ViewField.resolveSetter(field: String) =
                 ViewProperty.checked -> "isChecked = $field"
             }
         } else {
-            ""
+            if (propertyName.isNotEmpty()) {
+                "$propertyName = $field"
+            } else {
+                "$propertySetter($field)"
+            }
         }
+
+fun ViewField.validateCorrectSetup(): Boolean {
+    if (property == ViewProperty.none && safeGetType { type }.let { it is ClassName && it.canonicalName == "java.lang.Object" }) return false
+    if (property == ViewProperty.none && defaultValue.isEmpty()) return false
+    if (property == ViewProperty.none && childName.isNotEmpty() && propertyName.isEmpty() && propertySetter.isEmpty()) return false
+
+    return true;
+}

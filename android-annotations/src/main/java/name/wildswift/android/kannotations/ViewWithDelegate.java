@@ -30,7 +30,7 @@ public @interface ViewWithDelegate {
 
     Class parent();
 
-    int layoutResource() default 0;
+    String layoutResourceName() default "";
 
     ViewAttribute[] attrs() default {};
 

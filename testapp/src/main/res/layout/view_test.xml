@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        tools:text="@string/app_name"
+        tools:text="@android:string/dialog_alert_title"
         android:textSize="30sp" />
 
     <CheckBox

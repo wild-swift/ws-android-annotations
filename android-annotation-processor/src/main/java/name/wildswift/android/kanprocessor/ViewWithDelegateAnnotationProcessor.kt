@@ -17,6 +17,7 @@
 package name.wildswift.android.kanprocessor
 
 import com.squareup.kotlinpoet.*
+import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
 import name.wildswift.android.kannotations.ViewWithDelegate
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
@@ -84,13 +85,16 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
     }
 
     private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants) {
-        val layoutName = annotation.layoutResource
-                .let { if (it != 0) resolveIntFieldName(envConstants.packageLayoutsTypeElement, it) else className.toViewResourceName() }
-                ?: throw IllegalArgumentException("Can't resolve name for ${annotation.layoutResource} in class ${envConstants.packageLayoutsTypeElement.qualifiedName}")
+        val layoutName = annotation.layoutResourceName.takeIf { it.isNotEmpty() }
+                ?: className.toViewResourceName()
 
         val viewClassName = annotation.name.takeIf { it.isNotBlank() }
                 ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                 ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $pack.$className")
+
+        val validate = annotation.fields.all { it.validateCorrectSetup() }
+
+        if (!validate) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
 
         val inputProperties = annotation
                 .fields
@@ -98,7 +102,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .map {
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { propertyType },
+                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
                             if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
                     )
                 }
@@ -108,13 +112,13 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .map {
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { propertyType },
+                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
                             if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
                     )
                 }
 
-        val (inputDataClassType, inputDataClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties)
-        val (internalDataClassType, internalDataClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties)
+        val (inputDataClassType, inputDataClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
+        val (internalDataClassType, internalDataClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
 
 
         val viewClassFile = FileSpec
@@ -122,7 +126,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
 
         viewClassFile.addImport(envConstants.appId, "R")
-        viewClassFile.addImport("android.view.View", "inflate")
+        viewClassFile.addImport(viewClass, "inflate")
         viewClassFile.addImport("kotlinx.android.synthetic.main.$layoutName", "view.*")
 
         val viewClass = TypeSpec
@@ -140,46 +144,15 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         viewClass.addInitializerBlock(
                 CodeBlock.builder()
                         .addStatement("inflate(context, R.layout.$layoutName, this)")
-                        .addStatement("delegate.setupView(this)")
+                        .addStatement("delegate.setupView()")
                         .build()
         )
 
         val delegateClass = ClassName(pack, className)
-        val delegateProperty = PropertySpec.builder("delegate", delegateClass).addModifiers(KModifier.PRIVATE).initializer("%T()", delegateClass).build()
+        val delegateProperty = PropertySpec.builder("delegate", delegateClass).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateClass).build()
         viewClass.addProperty(delegateProperty)
 
-        val internalModelProperty =
-                if (internalDataClass != null)
-                    PropertySpec.builder("intModel", internalDataClassType)
-                            .mutable()
-                            .addModifiers(KModifier.PRIVATE)
-                            .delegate(
-                                    CodeBlock.builder()
-                                            .add("""
-                                                |%1T.observable(%2T()) { _, oldValue, newValue ->
-                                                |        if (oldValue == newValue) return@observable
-                                                |
-                                            """.trimMargin(), Delegates::class.asTypeName(), internalDataClassType)
-                                            .add(annotation
-                                                    .fields
-                                                    .filter { it.childId != 0 }
-                                                    .joinToString(separator = "\n") {
-                                                        "        if (oldValue.${it.name} != newValue.${it.name}) ${resolveIntFieldName(envConstants.packageIdsTypeElement, it.childId)}.${it.resolveSetter("newValue.${it.name}")}"
-                                                    }
-                                            )
-                                            .add("""
-                                                |
-                                                |        %N.onNewInternalState(this, newValue)
-                                                |    }
-                                            """.trimMargin(), delegateProperty)
-                                            .build()
-                            )
-                            .build()
-                else
-                    null
-
-
-        internalModelProperty?.also { viewClass.addProperty(internalModelProperty) }
+        val internalModelProperty = internalDataClass?.let { internalModelProperty(internalDataClassType, annotation.fields, delegateProperty).apply { viewClass.addProperty(this) } }
 
         val inputModelProperty =
                 if (inputDataClass != null) {
@@ -251,41 +224,43 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         }
 
+        viewClass
+                .delegateCall("onAttachedToWindow", delegateProperty, "onShow")
+                .delegateCall("onDetachedFromWindow", delegateProperty, "onHide")
+
         viewClassFile.addType(viewClass.build())
 
         viewClassFile.build().writeTo(File(generationPath))
 
     }
 
-    private fun generateDataClass(pack: String, className: String, inputProperties: List<PropertyData>): Pair<ClassName, TypeSpec?> {
-        val inputDataClassType = ClassName(pack, className)
-        val inputDataClass = TypeSpec
-                .classBuilder(inputDataClassType)
-                .addModifiers(KModifier.DATA)
-                .primaryConstructor(
-                        FunSpec.constructorBuilder()
-                                .let { builder ->
-                                    inputProperties.forEach { builder.addParameter(ParameterSpec.builder(it.name, it.type).defaultValue(it.defaultValue).build()) }
-                                    builder
-                                }
+    private fun internalModelProperty(internalDataClassType: ClassName, fieldsToSet: Array<ViewField>, delegateProperty: PropertySpec): PropertySpec {
+        return PropertySpec.builder("intModel", internalDataClassType)
+                .mutable()
+                .addModifiers(KModifier.PRIVATE)
+                .delegate(
+                        CodeBlock.builder()
+                                .add("""
+                                                    |%1T.observable(%2T()) { _, oldValue, newValue ->
+                                                    |        if (oldValue == newValue) return@observable
+                                                    |
+                                                """.trimMargin(), Delegates::class.asTypeName(), internalDataClassType)
+                                .add(fieldsToSet
+                                        .filter { it.childName.isNotEmpty() }
+                                        .joinToString(separator = "\n") {
+                                            "        if (oldValue.${it.name} != newValue.${it.name}) ${it.childName}.${it.resolveSetter("newValue.${it.name}")}"
+                                        }
+                                )
+                                .add("""
+                                                    |
+                                                    |        %N.onNewInternalState(newValue)
+                                                    |    }
+                                                """.trimMargin(), delegateProperty)
                                 .build()
                 )
-                .let { builder ->
-                    inputProperties.forEach { builder.addProperty(PropertySpec.builder(it.name, it.type).initializer(it.name).build()) }
-                    builder
-                }
                 .build()
-                .takeIf { inputProperties.isNotEmpty() }
-
-        if (inputDataClass != null) {
-            FileSpec
-                    .builder(pack, className)
-                    .addType(inputDataClass)
-                    .build()
-                    .writeTo(File(generationPath))
-        }
-        return inputDataClassType to inputDataClass
     }
+
 
     private fun resolveIntFieldName(typeElement: TypeElement, value: Int): String? {
         return typeElement

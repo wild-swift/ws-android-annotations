@@ -19,19 +19,18 @@ package name.wildswift.android.kannotations;
  * Created by swift
  */
 public @interface ViewField {
-    int childId() default 0;
+    // common properties
+    String name();
+    Class type() default Object.class;
+    String defaultValue() default "";
+
+    // change child properties
+    String childName() default "";
 
     ViewProperty property() default ViewProperty.none;
 
     String propertyName() default "";
-
-    Class propertyType() default Object.class;
-
-    String defaultValue() default "";
-
-    String name();
-
-    boolean readable() default false;
+    String propertySetter() default "";
 
     boolean publicAccess() default true;
 }

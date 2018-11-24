@@ -15,10 +15,9 @@
  */
 package name.wildswift.android.kanprocessor.utils
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.*
+import name.wildswift.android.kanprocessor.datahelpers.PropertyData
+import java.io.File
 
 /**
  * Created by swift
@@ -52,3 +51,41 @@ fun TypeSpec.Builder.addViewConstructors(additionalCalls: FunSpec.Builder.(Int) 
 
 val contextClass = ClassName("android.content", "Context")
 val viewClass = ClassName("android.view", "View")
+
+fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: PropertySpec, delegatedName: String) = addFunction(
+        FunSpec.builder(methodName)
+                .addModifiers(KModifier.OVERRIDE)
+                .addStatement("super.$methodName()")
+                .addStatement("%1N.$delegatedName()", delegateProperty)
+                .build()
+)
+
+fun generateDataClass(pack: String, className: String, inputProperties: List<PropertyData>, generationPath: String = ""): Pair<ClassName, TypeSpec?> {
+    val classType = ClassName(pack, className)
+    val classSpec = TypeSpec
+            .classBuilder(classType)
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                    FunSpec.constructorBuilder()
+                            .let { builder ->
+                                inputProperties.forEach { builder.addParameter(ParameterSpec.builder(it.name, it.type).defaultValue(it.defaultValue).build()) }
+                                builder
+                            }
+                            .build()
+            )
+            .let { builder ->
+                inputProperties.forEach { builder.addProperty(PropertySpec.builder(it.name, it.type).initializer(it.name).build()) }
+                builder
+            }
+            .build()
+            .takeIf { inputProperties.isNotEmpty() }
+
+    if (classSpec != null && generationPath.isNotEmpty()) {
+        FileSpec
+                .builder(pack, className)
+                .addType(classSpec)
+                .build()
+                .writeTo(File(generationPath))
+    }
+    return classType to classSpec
+}

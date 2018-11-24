@@ -15,19 +15,40 @@
  */
 package name.wildswift.android.kannotations.interfaces;
 
+import android.content.Context;
+import android.view.View;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by swift
  */
-public class ViewDelegate<V, VM> {
-    public void setupView(@NotNull V view) {
+@SuppressWarnings("WeakerAccess")
+public class ViewDelegate<V extends View, VM> {
+    protected final V view;
+    protected final Context context;
+
+    protected VM internalState;
+
+    protected ViewDelegate(@NotNull V view) {
+        this.view = view;
+        context = view.getContext();
+    }
+
+    public void setupView() {
     }
 
     public VM validateStateForNewInput(@NotNull VM data) {
         return data;
     }
 
-    public void onNewInternalState(@NotNull V view, @NotNull VM data) {
+    public void onNewInternalState(@NotNull VM data) {
+        internalState = data;
+    }
+
+    public void onShow() {
+    }
+
+    public void onHide() {
     }
 }
