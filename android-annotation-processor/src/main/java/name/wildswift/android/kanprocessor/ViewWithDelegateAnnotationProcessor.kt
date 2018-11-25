@@ -85,16 +85,15 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
     }
 
     private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants) {
-        val layoutName = annotation.layoutResourceName.takeIf { it.isNotEmpty() }
-                ?: className.toViewResourceName()
-
         val viewClassName = annotation.name.takeIf { it.isNotBlank() }
                 ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                 ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $pack.$className")
 
-        val validate = annotation.fields.all { it.validateCorrectSetup() }
+        val layoutName = annotation.layoutResourceName.takeIf { it.isNotEmpty() }
+                ?: viewClassName.toViewResourceName()
 
-        if (!validate) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
+        if (annotation.fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
+        if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
 
         val inputProperties = annotation
                 .fields
@@ -117,8 +116,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     )
                 }
 
-        val (inputDataClassType, inputDataClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
-        val (internalDataClassType, internalDataClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
+        val (inputModelType, inputModelClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
+        val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
 
 
         val viewClassFile = FileSpec
@@ -141,50 +140,39 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 }
 
 
+        val delegateType = ClassName(pack, className)
+        val delegateProperty = PropertySpec.builder("delegate", delegateType).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateType).build().apply { viewClass.addProperty(this) }
+
+        val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, annotation.fields, delegateProperty).apply { viewClass.addProperty(this) } }
+        val inputModelProperty = inputModelClass?.let { inputModelProperty(inputModelType, internalModelProperty!!, inputProperties, delegateProperty).apply { viewClass.addProperty(this) } }
+
+        annotation
+                .events
+                .forEach {
+                    PropertySpec
+                            .builder(it.name, LambdaTypeName.get(returnType = Unit::class.asTypeName()).asNullable())
+                            .mutable()
+                            .initializer("null")
+                            .build()
+                            .apply {
+                                viewClass.addProperty(this)
+                            }
+                }
+
         viewClass.addInitializerBlock(
                 CodeBlock.builder()
                         .addStatement("inflate(context, R.layout.$layoutName, this)")
-                        .addStatement("delegate.setupView()")
+                        .addStatement("%1N.setupView()", delegateProperty)
+                        .let { codeBlockBuilder ->
+                            annotation
+                                    .events
+                                    .forEach {
+                                        codeBlockBuilder.add(it.childName.let { if (it.isEmpty()) "" else "$it." } + it.resolveListener("${it.name}?.invoke()"))
+                                    }
+                            codeBlockBuilder
+                        }
                         .build()
         )
-
-        val delegateClass = ClassName(pack, className)
-        val delegateProperty = PropertySpec.builder("delegate", delegateClass).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateClass).build()
-        viewClass.addProperty(delegateProperty)
-
-        val internalModelProperty = internalDataClass?.let { internalModelProperty(internalDataClassType, annotation.fields, delegateProperty).apply { viewClass.addProperty(this) } }
-
-        val inputModelProperty =
-                if (inputDataClass != null) {
-                    PropertySpec.builder("inputModel", inputDataClassType)
-                            .mutable()
-                            .delegate(
-                                    CodeBlock.builder()
-                                            .add("""
-                                                |%1T.observable(%2T()) { _, _, newValue ->
-                                                |        %3N =
-                                                |                %4N.validateStateForNewInput(
-                                                |                        %3N.copy(
-                                                |
-                                            """.trimMargin(), Delegates::class.asTypeName(), inputDataClassType, internalModelProperty, delegateProperty)
-                                            .add(inputProperties
-                                                    .joinToString(separator = ",\n") {
-                                                        "                                ${it.name} = newValue.${it.name}"
-                                                    }
-                                            )
-                                            .add("""
-                                                |
-                                                |                        )
-                                                |                )
-                                                |    }
-                                            """.trimMargin())
-                                            .build()
-                            )
-                            .build()
-                } else {
-                    null
-                }
-        inputModelProperty?.also { viewClass.addProperty(inputModelProperty) }
 
 
         if (annotation.attrs.isNotEmpty()) {
@@ -232,6 +220,34 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         viewClassFile.build().writeTo(File(generationPath))
 
+    }
+
+    private fun inputModelProperty(inputDataClassType: ClassName, internalModelProperty: PropertySpec, inputProperties: List<PropertyData>, delegateProperty: PropertySpec): PropertySpec {
+        return PropertySpec.builder("inputModel", inputDataClassType)
+                .mutable()
+                .delegate(
+                        CodeBlock.builder()
+                                .add("""
+                                                    |%1T.observable(%2T()) { _, _, newValue ->
+                                                    |        %3N =
+                                                    |                %4N.validateStateForNewInput(
+                                                    |                        %3N.copy(
+                                                    |
+                                                """.trimMargin(), Delegates::class.asTypeName(), inputDataClassType, internalModelProperty, delegateProperty)
+                                .add(inputProperties
+                                        .joinToString(separator = ",\n") {
+                                            "                                ${it.name} = newValue.${it.name}"
+                                        }
+                                )
+                                .add("""
+                                                    |
+                                                    |                        )
+                                                    |                )
+                                                    |    }
+                                                """.trimMargin())
+                                .build()
+                )
+                .build()
     }
 
     private fun internalModelProperty(internalDataClassType: ClassName, fieldsToSet: Array<ViewField>, delegateProperty: PropertySpec): PropertySpec {

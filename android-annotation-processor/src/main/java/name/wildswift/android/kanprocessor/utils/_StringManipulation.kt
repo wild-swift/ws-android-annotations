@@ -19,12 +19,17 @@ package name.wildswift.android.kanprocessor.utils
  * Created by swift
  */
 fun String.toScreamingCase() = this
-        .map {
-            if (it.isUpperCase()) "_$it" else "" + it.toUpperCase()
-        }
+        .toCharArray()
         .fold("") { prev, v ->
-            prev + v
+            when {
+                prev.length == 0 -> "" + v
+                v.isUpperCase() -> prev + "_" + v
+                !prev.last().isDigit() && v.isDigit() -> prev + "_" + v
+                prev.last().isDigit() && !v.isDigit() -> prev + "_" + v
+                else -> prev + v
+            }
         }
+        .toUpperCase()
         .let {
             var result = it
             while (result.startsWith("_")) result = result.substring(1)

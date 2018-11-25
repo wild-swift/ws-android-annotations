@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package name.wildswift.android.kannotations;
 
 import java.lang.annotation.ElementType;
@@ -25,19 +26,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface ViewField {
-    // common properties
+public @interface ViewEvent {
     String name();
-    Class type() default Object.class;
-    String defaultValue() default "";
-
-    // change child properties
     String childName() default "";
 
-    ViewProperty property() default ViewProperty.none;
-
-    String propertyName() default "";
-    String propertySetter() default "";
-
-    boolean publicAccess() default true;
+    ViewListener listener() default ViewListener.none;
+    String listenerName() default "";
 }
