@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2018 Wild Swift
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
@@ -5,20 +21,37 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'name.wildswift.android'
-version = '0.2'
+version = publish_version
 
 dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
 
 publishing {
     publications {
         Production(MavenPublication) {
             artifact("$buildDir/libs/android-annotations-${this.version}.jar")
+            artifact sourcesJar
+            artifact javadocJar
+
             groupId this.group
             artifactId 'android-annotations'
             version this.version
@@ -53,10 +86,13 @@ bintray {
         publicDownloadNumbers = true
         vcsUrl = 'https://github.com/wild-swift/ws-android-annotations.git'
         version {
-            name = '0.2'
+            name = publish_version
             desc = 'First alpha version'
-            released  = new Date()
-            vcsTag = '0.2'
+            released = new Date()
+            vcsTag = publish_version
         }
     }
 }
+
+bintrayUpload.dependsOn(jar, javadocJar, sourcesJar)
+bintrayUpload.dependsOn "generatePomFileForProductionPublication"
