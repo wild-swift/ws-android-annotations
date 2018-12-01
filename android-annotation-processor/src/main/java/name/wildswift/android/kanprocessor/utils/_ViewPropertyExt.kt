@@ -28,6 +28,8 @@ fun ViewProperty.getType() = when (this) {
     ViewProperty.visibility -> Int::class.asTypeName()
     ViewProperty.textColor -> Int::class.asTypeName()
     ViewProperty.checked -> Boolean::class.asTypeName()
+    ViewProperty.timePickerHour -> Int::class.asTypeName()
+    ViewProperty.timePickerMinute -> Int::class.asTypeName()
 }
 
 fun ViewProperty.getDefaultValue() = when (this) {
@@ -37,4 +39,36 @@ fun ViewProperty.getDefaultValue() = when (this) {
     ViewProperty.visibility -> "0"
     ViewProperty.textColor -> "0xFFFFFFFF.toInt()"
     ViewProperty.checked -> "false"
+    ViewProperty.timePickerHour -> "0"
+    ViewProperty.timePickerMinute -> "0"
+}
+
+fun ViewProperty.getListenerGroup() = when (this) {
+    ViewProperty.none -> arrayOf()
+    ViewProperty.text -> arrayOf(ViewProperty.text)
+    ViewProperty.visibility -> arrayOf(ViewProperty.visibility)
+    ViewProperty.textColor -> arrayOf(ViewProperty.textColor)
+    ViewProperty.checked -> arrayOf(ViewProperty.checked)
+    ViewProperty.timePickerHour -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
+    ViewProperty.timePickerMinute -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
+}
+
+fun ViewProperty.buildListener(body: String) = when (this) {
+    ViewProperty.text -> ""
+    ViewProperty.checked -> ""
+    ViewProperty.timePickerHour, ViewProperty.timePickerMinute -> """
+        |setOnTimeChangedListener { _, hour, minute ->
+        |$body
+        |}
+        |
+    """.trimMargin()
+    else -> ""
+}
+
+fun ViewProperty.getListenerPropertyName() = when (this) {
+    ViewProperty.text -> "text.toString()"
+    ViewProperty.checked -> "checked"
+    ViewProperty.timePickerHour -> "hour"
+    ViewProperty.timePickerMinute -> "minute"
+    else -> ""
 }

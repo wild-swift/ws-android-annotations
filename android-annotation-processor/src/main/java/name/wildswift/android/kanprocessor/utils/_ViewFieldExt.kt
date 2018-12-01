@@ -31,19 +31,21 @@ fun ViewField.resolveSetter(field: String) =
                 ViewProperty.visibility -> "visibility = $field"
                 ViewProperty.textColor -> "setTextColor($field)"
                 ViewProperty.checked -> "isChecked = $field"
+                ViewProperty.timePickerHour -> "hour = $field"
+                ViewProperty.timePickerMinute -> "minute = $field"
             }
         } else {
-            if (propertyName.isNotEmpty()) {
-                "$propertyName = $field"
+            if (childPropertyName.isNotEmpty()) {
+                "$childPropertyName = $field"
             } else {
-                "$propertySetter($field)"
+                "$childPropertySetter($field)"
             }
         }
 
 fun ViewField.validateCorrectSetup(): Boolean {
     if (property == ViewProperty.none && safeGetType { type }.let { it is ClassName && it.canonicalName == "java.lang.Object" }) return false
     if (property == ViewProperty.none && defaultValue.isEmpty()) return false
-    if (property == ViewProperty.none && childName.isNotEmpty() && propertyName.isEmpty() && propertySetter.isEmpty()) return false
+    if (property == ViewProperty.none && childName.isNotEmpty() && childPropertyName.isEmpty() && childPropertySetter.isEmpty()) return false
 
     return true;
 }

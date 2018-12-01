@@ -17,6 +17,7 @@
 package name.wildswift.android.kanprocessor
 
 import com.squareup.kotlinpoet.*
+import name.wildswift.android.kannotations.FieldRWType
 import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
 import name.wildswift.android.kannotations.ViewWithDelegate
@@ -95,17 +96,17 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         if (annotation.fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
         if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
 
-        val inputProperties = annotation
-                .fields
-                .filter { it.publicAccess }
-                .map {
-                    PropertyData(
-                            it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
-                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
-                    )
-                }
-
+//        val inputProperties = annotation
+//                .fields
+//                .filter { it.publicAccess }
+//                .map {
+//                    PropertyData(
+//                            it.name,
+//                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
+//                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
+//                    )
+//                }
+//
         val internalProperties = annotation
                 .fields
                 .map {
@@ -116,8 +117,10 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     )
                 }
 
-        val (inputModelType, inputModelClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
+
+//        val (inputModelType, inputModelClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
+//        val (outputModelType, outputModelClass) = generateDataClass(pack, "${viewClassName}Output", outputProperties, generationPath)
 
 
         val viewClassFile = FileSpec
@@ -144,7 +147,74 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val delegateProperty = PropertySpec.builder("delegate", delegateType).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateType).build().apply { viewClass.addProperty(this) }
 
         val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, annotation.fields, delegateProperty).apply { viewClass.addProperty(this) } }
-        val inputModelProperty = inputModelClass?.let { inputModelProperty(inputModelType, internalModelProperty!!, inputProperties, delegateProperty).apply { viewClass.addProperty(this) } }
+
+        val notifyChangedOldModel = ParameterSpec.builder("oldModel", internalModelType).build()
+        val notifyChangedCurrentModel = ParameterSpec.builder("currentModel", internalModelType).build()
+        val notifyChangedFunBuilder = FunSpec
+                .builder("notifyChanged")
+                .addModifiers(KModifier.PRIVATE)
+                .addParameter(notifyChangedOldModel)
+                .addParameter(notifyChangedCurrentModel)
+
+        annotation
+                .fields
+                .filter { it.publicAccess }
+                .forEach { field ->
+                    val fieldType = if (field.property != ViewProperty.none) field.property.getType() else field.safeGetType { type }
+                    val onChangedListener =
+                            if (field.rwType != FieldRWType.writeOnly) {
+                                PropertySpec
+                                        .builder("on${field.name.capitalize()}Changed", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(fieldType)), returnType = Unit::class.asTypeName()).asNullable())
+                                        .mutable()
+                                        .initializer("null")
+                                        .build()
+                            } else {
+                                null
+                            }
+
+                    val fieldProperty = PropertySpec
+                            .builder(field.name, fieldType)
+                            .getter(FunSpec.getterBuilder().addStatement("return %N.${field.name}", internalModelProperty!!).build())
+                            .also {
+                                if (field.rwType != FieldRWType.readOnly) {
+                                    it.mutable().setter(
+                                            FunSpec.setterBuilder()
+                                                    .addParameter(ParameterSpec.builder("value", fieldType).build())
+                                                    .addStatement("if (%1N.${field.name} == value) return", internalModelProperty)
+                                                    .addStatement("%1N = %2N.validateStateForNewInput(%1N.copy(${field.name} = value))", internalModelProperty, delegateProperty)
+                                                    .apply {
+                                                        onChangedListener?.apply {
+                                                            addStatement("%1N?.invoke(value)", this)
+                                                        }
+                                                    }
+                                                    .build()
+                                    )
+                                }
+                            }
+                            .build()
+
+                    viewClass.addProperty(fieldProperty)
+                    onChangedListener?.apply {
+                        viewClass.addProperty(this)
+                        notifyChangedFunBuilder.addStatement("if (%1N.${field.name} != %2N.${field.name}) %3N?.invoke(%2N.${field.name})", notifyChangedOldModel, notifyChangedCurrentModel, onChangedListener)
+                    }
+
+                }
+
+        val notifyChangedFun = notifyChangedFunBuilder.build()
+//        var currentTime: Long = 0
+//        set(value) {
+//            if (field == value) return
+//            field = value
+//            intModel = delegate.validateStateForNewInput(intModel.copy(currentTime = value))
+//            onCurrentTimeChanged?.invoke(value)
+//        }
+//
+//        var onCurrentTimeChanged: ((Long) -> Unit)? = null
+//
+
+//        val outputModelProperty = outputModelClass?.let { outputModelProperty(outputModelType).apply { viewClass.addProperty(this) } }
+//        val inputModelProperty = inputModelClass?.let { inputModelProperty(inputModelType, internalModelProperty!!, inputProperties, delegateProperty).apply { viewClass.addProperty(this) } }
 
         annotation
                 .events
@@ -163,13 +233,53 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 CodeBlock.builder()
                         .addStatement("inflate(context, R.layout.$layoutName, this)")
                         .addStatement("%1N.setupView()", delegateProperty)
-                        .let { codeBlockBuilder ->
+                        .also { codeBlockBuilder ->
                             annotation
                                     .events
                                     .forEach {
                                         codeBlockBuilder.add(it.childName.let { if (it.isEmpty()) "" else "$it." } + it.resolveListener("${it.name}?.invoke()"))
                                     }
-                            codeBlockBuilder
+                        }
+                        .also { codeBlockBuilder ->
+                            annotation
+                                    .fields
+                                    .filter { it.childName.isNotEmpty() }
+                                    .filter { it.rwType != FieldRWType.writeOnly }
+                                    .groupBy { it.childName }
+                                    .forEach { child, value ->
+                                        var propertiesList = value
+                                        while (propertiesList.isNotEmpty()) {
+                                            val viewField = propertiesList[0]
+                                            val listenerGroup = viewField.property.getListenerGroup()
+                                            if (listenerGroup.isNotEmpty()) {
+                                                listenerGroup
+                                                        .mapNotNull { property -> propertiesList.find { it.property == property } }
+                                                        .let {
+                                                            """
+                                                                |    if (${it.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) {
+                                                                |        val oldModel = %1N
+                                                                |        %1N = %2N.validateStateForOutput(
+                                                                |                %1N.copy(
+                                                                |${it.joinToString(separator = ",\n") { "                    ${it.name} = ${it.property.getListenerPropertyName()}" }}
+                                                                |                )
+                                                                |        )
+                                                                |        %2N.onNewInternalState(%1N)
+                                                                |        %3N(oldModel, %1N)
+                                                                |    }
+                                                        """.trimMargin()
+                                                        }
+                                                        .let { listenerGroup.first().buildListener(it) }
+                                                        .let { "$child.$it" }
+                                                        .also {
+                                                            codeBlockBuilder.add(it, internalModelProperty!!, delegateProperty, notifyChangedFun)
+
+                                                        }
+
+                                                propertiesList = propertiesList.filter { !listenerGroup.contains(it.property) }
+                                            }
+                                        }
+                                    }
+
                         }
                         .build()
         )
@@ -194,6 +304,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                         .builder(propertyName, it.type.fieldClass())
                         .mutable()
                         .initializer(it.type.initValue())
+
+/*
                 if (inputProperties.find { it.name == propertyName } != null && inputModelProperty != null) {
                     propertyForAttr.setter(FunSpec
                             .setterBuilder()
@@ -202,6 +314,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                             .build()
                     )
                 }
+*/
                 viewClass.addProperty(propertyForAttr.build())
 
                 setAttrsFun.addStatement("$propertyName = styleAttrs.${it.type.loadCode("R.styleable.${viewClassName}_$propertyName")}")
@@ -216,14 +329,17 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .delegateCall("onAttachedToWindow", delegateProperty, "onShow")
                 .delegateCall("onDetachedFromWindow", delegateProperty, "onHide")
 
+        if (internalModelProperty != null) {
+            viewClass.addFunction(notifyChangedFun)
+        }
         viewClassFile.addType(viewClass.build())
 
         viewClassFile.build().writeTo(File(generationPath))
 
     }
 
-    private fun inputModelProperty(inputDataClassType: ClassName, internalModelProperty: PropertySpec, inputProperties: List<PropertyData>, delegateProperty: PropertySpec): PropertySpec {
-        return PropertySpec.builder("inputModel", inputDataClassType)
+    private fun inputModelProperty(modelType: ClassName, internalModelProperty: PropertySpec, inputProperties: List<PropertyData>, delegateProperty: PropertySpec): PropertySpec {
+        return PropertySpec.builder("inputModel", modelType)
                 .mutable()
                 .delegate(
                         CodeBlock.builder()
@@ -233,7 +349,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                     |                %4N.validateStateForNewInput(
                                                     |                        %3N.copy(
                                                     |
-                                                """.trimMargin(), Delegates::class.asTypeName(), inputDataClassType, internalModelProperty, delegateProperty)
+                                                """.trimMargin(), Delegates::class.asTypeName(), modelType, internalModelProperty, delegateProperty)
                                 .add(inputProperties
                                         .joinToString(separator = ",\n") {
                                             "                                ${it.name} = newValue.${it.name}"
@@ -250,8 +366,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .build()
     }
 
-    private fun internalModelProperty(internalDataClassType: ClassName, fieldsToSet: Array<ViewField>, delegateProperty: PropertySpec): PropertySpec {
-        return PropertySpec.builder("intModel", internalDataClassType)
+    private fun internalModelProperty(modelType: ClassName, fieldsToSet: Array<ViewField>, delegateProperty: PropertySpec): PropertySpec {
+        return PropertySpec.builder("intModel", modelType)
                 .mutable()
                 .addModifiers(KModifier.PRIVATE)
                 .delegate(
@@ -260,9 +376,10 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                     |%1T.observable(%2T()) { _, oldValue, newValue ->
                                                     |        if (oldValue == newValue) return@observable
                                                     |
-                                                """.trimMargin(), Delegates::class.asTypeName(), internalDataClassType)
+                                                """.trimMargin(), Delegates::class.asTypeName(), modelType)
                                 .add(fieldsToSet
                                         .filter { it.childName.isNotEmpty() }
+                                        .filter { it.rwType != FieldRWType.readOnly }
                                         .joinToString(separator = "\n") {
                                             "        if (oldValue.${it.name} != newValue.${it.name}) ${it.childName}.${it.resolveSetter("newValue.${it.name}")}"
                                         }
@@ -274,6 +391,14 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                 """.trimMargin(), delegateProperty)
                                 .build()
                 )
+                .build()
+    }
+
+    private fun outputModelProperty(modelType: ClassName): PropertySpec {
+        return PropertySpec.builder("outputModel", modelType)
+                .mutable()
+                .setter(FunSpec.setterBuilder().addParameter(ParameterSpec.builder("value", modelType).build()).addModifiers(KModifier.PRIVATE).addStatement("field = value").build())
+                .initializer("%1T()", modelType)
                 .build()
     }
 

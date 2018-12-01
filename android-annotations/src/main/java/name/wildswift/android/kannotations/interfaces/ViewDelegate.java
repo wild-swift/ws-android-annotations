@@ -42,6 +42,10 @@ public class ViewDelegate<V extends View, VM> {
         return data;
     }
 
+    public VM validateStateForOutput(@NotNull VM data) {
+        return data;
+    }
+
     public void onNewInternalState(@NotNull VM data) {
         internalState = data;
     }

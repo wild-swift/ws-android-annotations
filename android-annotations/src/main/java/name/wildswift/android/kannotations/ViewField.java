@@ -36,8 +36,10 @@ public @interface ViewField {
 
     ViewProperty property() default ViewProperty.none;
 
-    String propertyName() default "";
-    String propertySetter() default "";
+    String childPropertyName() default "";
+    String childPropertySetter() default "";
 
     boolean publicAccess() default true;
+
+    FieldRWType rwType() default FieldRWType.writeOnly;
 }
