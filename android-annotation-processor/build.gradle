@@ -24,21 +24,37 @@ group = 'name.wildswift.android'
 version = publish_version
 
 dependencies {
-//    implementation "name.wildswift.android:android-annotations:$dep_version"
+    implementation "name.wildswift.android:android-annotations:$dep_version"
 
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$kotlinx_metadata_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup:kotlinpoet:1.0.0-RC2'
-    implementation project(':android-annotations')
 }
 
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
 
 publishing {
     publications {
         Production(MavenPublication) {
             artifact("$buildDir/libs/android-annotation-processor-${this.version}.jar")
+            artifact sourcesJar
+            artifact javadocJar
+
             groupId this.group
             artifactId 'android-annotation-processor'
             version this.version
@@ -80,3 +96,6 @@ bintray {
         }
     }
 }
+
+bintrayUpload.dependsOn(jar, javadocJar, sourcesJar)
+bintrayUpload.dependsOn "generatePomFileForProductionPublication"
