@@ -96,17 +96,6 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         if (annotation.fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
         if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
 
-//        val inputProperties = annotation
-//                .fields
-//                .filter { it.publicAccess }
-//                .map {
-//                    PropertyData(
-//                            it.name,
-//                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
-//                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
-//                    )
-//                }
-//
         val internalProperties = annotation
                 .fields
                 .map {
@@ -118,9 +107,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 }
 
 
-//        val (inputModelType, inputModelClass) = generateDataClass(pack, "${viewClassName}Input", inputProperties, generationPath)
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
-//        val (outputModelType, outputModelClass) = generateDataClass(pack, "${viewClassName}Output", outputProperties, generationPath)
 
 
         val viewClassFile = FileSpec
@@ -200,21 +187,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     }
 
                 }
-
         val notifyChangedFun = notifyChangedFunBuilder.build()
-//        var currentTime: Long = 0
-//        set(value) {
-//            if (field == value) return
-//            field = value
-//            intModel = delegate.validateStateForNewInput(intModel.copy(currentTime = value))
-//            onCurrentTimeChanged?.invoke(value)
-//        }
-//
-//        var onCurrentTimeChanged: ((Long) -> Unit)? = null
-//
-
-//        val outputModelProperty = outputModelClass?.let { outputModelProperty(outputModelType).apply { viewClass.addProperty(this) } }
-//        val inputModelProperty = inputModelClass?.let { inputModelProperty(inputModelType, internalModelProperty!!, inputProperties, delegateProperty).apply { viewClass.addProperty(this) } }
 
         annotation
                 .events
@@ -297,27 +270,17 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     .addStatement("val styleAttrs = context.obtainStyledAttributes(attrs, R.styleable.$viewClassName)")
 
             annotation.attrs.forEach {
-                val fieldName = resolveIntFieldName(envConstants.packageAttrTypeElement, it.reference)
-                        ?: throw IllegalArgumentException("Can't resolve name for ${it.reference} in class ${envConstants.packageAttrTypeElement.qualifiedName}")
-                val propertyName = if (it.fieldName.isBlank()) fieldName else it.fieldName
-                val propertyForAttr = PropertySpec
-                        .builder(propertyName, it.type.fieldClass())
-                        .mutable()
-                        .initializer(it.type.initValue())
-
-/*
-                if (inputProperties.find { it.name == propertyName } != null && inputModelProperty != null) {
-                    propertyForAttr.setter(FunSpec
-                            .setterBuilder()
-                            .addParameter("value", it.type.fieldClass())
-                            .addStatement("%1N = %1N.copy($propertyName = value)", inputModelProperty)
+                val propertyName = if (it.fieldName.isBlank()) it.reference else it.fieldName
+                if (annotation.fields.find { it.publicAccess && it.name == propertyName } == null) {
+                    viewClass.addProperty(PropertySpec
+                            .builder(propertyName, it.type.fieldClass())
+                            .mutable()
+                            .initializer(it.type.initValue())
                             .build()
                     )
                 }
-*/
-                viewClass.addProperty(propertyForAttr.build())
 
-                setAttrsFun.addStatement("$propertyName = styleAttrs.${it.type.loadCode("R.styleable.${viewClassName}_$propertyName")}")
+                setAttrsFun.addStatement("$propertyName = styleAttrs.${it.type.loadCode("R.styleable.${viewClassName}_${it.reference}")}")
             }
 
             setAttrsFun.addStatement("styleAttrs.recycle()")

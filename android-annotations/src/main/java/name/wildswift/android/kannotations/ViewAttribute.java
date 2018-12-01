@@ -19,7 +19,7 @@ package name.wildswift.android.kannotations;
  * Created by swift
  */
 public @interface ViewAttribute {
-    int reference();
+    String reference();
 
     AttributeType type();
 

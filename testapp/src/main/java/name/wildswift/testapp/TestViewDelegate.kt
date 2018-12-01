@@ -25,20 +25,20 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
  */
 @ViewWithDelegate(
         parent = FrameLayout::class,
-        layoutResource = R.layout.view_test,
+        layoutResourceName = LayoutRNames.view_test,
         attrs = [
-            ViewAttribute(reference = R.attr.visibleColor, type = AttributeType.color),
-            ViewAttribute(reference = R.attr.textIn, type = AttributeType.enum_)
+            ViewAttribute(reference = AttrRNames.visibleColor, type = AttributeType.color),
+            ViewAttribute(reference = AttrRNames.textIn, type = AttributeType.enum_)
         ],
         fields = [
-            ViewField(childId = R.id.vtLabel, property = ViewProperty.text, name = "label"),
-            ViewField(childId = R.id.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
-            ViewField(childId = R.id.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
-            ViewField(childId = R.id.vtCheck, property = ViewProperty.checked, name = "check")
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label"),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
+            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check")
         ]
 )
-class TestViewDelegate : ViewDelegate<TestView, TestViewIntState>() {
-    override fun setupView(view: TestView) {
+class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState>(view) {
+    override fun setupView() {
 
     }
 
