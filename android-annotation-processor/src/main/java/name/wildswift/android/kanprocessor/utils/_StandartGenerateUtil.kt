@@ -51,6 +51,8 @@ fun TypeSpec.Builder.addViewConstructors(additionalCalls: FunSpec.Builder.(Int) 
 
 val contextClass = ClassName("android.content", "Context")
 val viewClass = ClassName("android.view", "View")
+val parcelableClass = ClassName("android.os", "Parcelable")
+val bundleClass = ClassName("android.os", "Bundle")
 
 fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: PropertySpec, delegatedName: String) = addFunction(
         FunSpec.builder(methodName)
@@ -89,3 +91,37 @@ fun generateDataClass(pack: String, className: String, inputProperties: List<Pro
     }
     return classType to classSpec
 }
+
+fun TypeSpec.Builder.generateViewSave(getIntState: FunSpec) = FunSpec
+        .builder("onSaveInstanceState")
+        .returns(parcelableClass)
+        .addModifiers(KModifier.OVERRIDE)
+        .addStatement("val result = %T()", bundleClass)
+        .addStatement("result.putParcelable(\"superState\", super.onSaveInstanceState())")
+        .addStatement("result.putBundle(\"currentState\", %N())", getIntState)
+        .addStatement("return result")
+        .build()
+        .let {
+            this.addFunction(it)
+            this
+        }
+
+fun TypeSpec.Builder.generateViewRestore(setIntState: FunSpec) = FunSpec
+        .builder("onRestoreInstanceState")
+        .addParameter(ParameterSpec.builder("state", parcelableClass.asNullable()).build())
+        .addModifiers(KModifier.OVERRIDE)
+        .addCode(CodeBlock.of("""
+            |    (state as? %1T)?.also {
+            |        it.classLoader = javaClass.classLoader
+            |        super.onRestoreInstanceState(it.getParcelable("superState"))
+            |        it.getBundle("currentState")?.also {
+            |            it.classLoader = javaClass.classLoader
+            |            %2N(it)
+            |        }
+            |    }
+        """.trimMargin(), bundleClass, setIntState))
+        .build()
+        .let {
+            this.addFunction(it)
+            this
+        }

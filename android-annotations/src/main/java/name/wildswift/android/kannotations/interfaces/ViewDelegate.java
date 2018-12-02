@@ -16,9 +16,11 @@
 package name.wildswift.android.kannotations.interfaces;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.View;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by swift
@@ -49,6 +51,16 @@ public class ViewDelegate<V extends View, VM> {
     public void onNewInternalState(@NotNull VM data) {
         internalState = data;
     }
+
+    @Nullable
+    public Bundle getState() {
+        return null;
+    }
+
+    public void setState(@Nullable Bundle state) {
+
+    }
+
 
     public void onShow() {
     }
