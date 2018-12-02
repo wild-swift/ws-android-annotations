@@ -15,15 +15,10 @@
  */
 package name.wildswift.android.kanprocessor
 
-import javax.lang.model.element.TypeElement
 
 /**
  * Created by swift
  */
 data class ProcessingEnvConstants(
-        val appId: String,
-        val packageLayoutsTypeElement: TypeElement,
-        val packageIdsTypeElement: TypeElement,
-        val packageStyleableTypeElement: TypeElement?,
-        val packageAttrTypeElement: TypeElement?
+        val appId: String
 )

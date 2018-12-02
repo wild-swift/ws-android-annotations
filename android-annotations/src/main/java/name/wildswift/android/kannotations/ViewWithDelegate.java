@@ -32,6 +32,8 @@ public @interface ViewWithDelegate {
 
     String layoutResourceName() default "";
 
+    boolean saveInstanceState() default true;
+
     ViewAttribute[] attrs() default {};
 
     ViewField[] fields() default {};

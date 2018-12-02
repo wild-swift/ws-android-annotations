@@ -46,27 +46,4 @@ class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState
         return data.copy(visible = if (data.check) View.VISIBLE else View.INVISIBLE)
     }
 
-    //    private var internalState = TestInternalState()
-//
-//    var model: TestConfigModel = TestConfigModel()
-//        set(value) {
-//            field = value
-//            internalState =
-//        }
-
-
 }
-
-//data class TestInternalState(
-//        val label: String,
-//        val visible: Boolean,
-//        val color: Int,
-//        val check: Boolean
-//)
-//
-//data class TestConfigModel(
-//        val label: String = "",
-//        val visible: Boolean = false,
-//        val color: Int = 0xFFFFFFFF.toInt(),
-//        val check: Boolean = false
-//)
