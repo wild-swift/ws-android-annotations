@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Wild Swift
+ * Copyright (C) 2020 Wild Swift
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 buildscript {
     ext.kotlin_version = '1.2.51'
     ext.kotlinx_metadata_version = '0.0.4'
-    ext.publish_version = '0.4'
-    ext.dep_version = '0.4'
+    ext.publish_version = '0.5'
+    ext.dep_version = '0.5'
     repositories {
         google()
         jcenter()
