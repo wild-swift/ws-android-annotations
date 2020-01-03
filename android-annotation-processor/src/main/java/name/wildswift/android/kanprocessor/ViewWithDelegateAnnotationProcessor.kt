@@ -17,19 +17,16 @@
 package name.wildswift.android.kanprocessor
 
 import com.squareup.kotlinpoet.*
-import name.wildswift.android.kannotations.FieldRWType
-import name.wildswift.android.kannotations.ViewField
-import name.wildswift.android.kannotations.ViewProperty
-import name.wildswift.android.kannotations.ViewWithDelegate
+import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 import name.wildswift.android.kanprocessor.datahelpers.PropertyData
 import name.wildswift.android.kanprocessor.utils.*
-import java.io.File
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
 import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.QualifiedNameable
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
@@ -44,7 +41,6 @@ import kotlin.properties.Delegates
 @SupportedAnnotationTypes("name.wildswift.android.kannotations.ViewWithDelegate")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
-    override val tmpFileName: String = "__V"
 
     private val checkViewDelegateVisitor: TypeVisitor<Boolean, Any?> = object : SimpleTypeVisitor8<Boolean, Any?>() {
         override fun visitDeclared(t: DeclaredType, p: Any?): Boolean {
@@ -52,6 +48,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         }
     }
 
+    override fun getSupportedOptions() = setOf("application.id")
 
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment): Boolean {
         val appId = processingEnv.options["application.id"]
@@ -72,13 +69,18 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                 ?: it.simpleName}")
             }
             (it as? TypeElement)?.apply {
-                writeExtensionsFile(simpleName.toString(), processingEnv.elementUtils.getPackageOf(it).toString(), it.getAnnotation(ViewWithDelegate::class.java), resolveKotlinVisibility(it), envConstants)
+                val className = simpleName.toString()
+                val packageName = processingEnv.elementUtils.getPackageOf(this).toString()
+                val metadata = this.getAnnotation(ViewWithDelegate::class.java)
+                val visibilityModifier = resolveKotlinVisibility(this)
+                val delegatedMethods = enclosedElements.filter { it.getAnnotation(Delegated::class.java) != null }.filterIsInstance<ExecutableElement>()
+                writeExtensionsFile(className, packageName, metadata, visibilityModifier, envConstants, delegatedMethods)
             }
         }
         return true
     }
 
-    private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants) {
+    private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants, delegatedMethods: List<ExecutableElement>) {
         val viewClassName = annotation.name.takeIf { it.isNotBlank() }
                 ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                 ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $pack.$className")
@@ -104,15 +106,11 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
         val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, annotation.fields, delegateProperty) }
 
-
-//    fun setState(state: Bundle)  {
-//
-//    }
-
         val saveStateMethod =
                 if (annotation.fields.isNotEmpty()) {
                     FunSpec
                             .builder("getState")
+                            .addModifiers(KModifier.PRIVATE)
                             .returns(bundleClass)
                             .addStatement("val result = %T()", bundleClass)
                             .apply {
@@ -131,6 +129,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 if (annotation.fields.isNotEmpty()) {
                     FunSpec
                             .builder("setState")
+                            .addModifiers(KModifier.PRIVATE)
                             .addParameter("state", bundleClass)
                             .addStatement("%1N = %2T(", internalModelProperty!!, internalModelType)
                             .apply {
@@ -178,7 +177,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .events
                 .forEach {
                     PropertySpec
-                            .builder(it.name, LambdaTypeName.get(returnType = Unit::class.asTypeName()).asNullable())
+                            .builder(it.name, LambdaTypeName.get(returnType = Unit::class.asTypeName()).copy(nullable = true))
                             .mutable()
                             .initializer("null")
                             .build()
@@ -224,6 +223,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                                 |        %2N.onNewInternalState(%1N)
                                                                 |        %3N(oldModel, %1N)
                                                                 |    }
+                                                                |
                                                         """.trimMargin()
                                                         }
                                                         .let { listenerGroup.first().buildListener(it) }
@@ -248,7 +248,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     .builder("setAttrs")
                     .addModifiers(KModifier.PRIVATE)
                     .addParameter("context", contextClass)
-                    .addParameter("attrs", ClassName("android.util", "AttributeSet").asNullable())
+                    .addParameter("attrs", ClassName("android.util", "AttributeSet").copy(nullable = true))
                     .addStatement("if (attrs == null) return")
                     .addStatement("val styleAttrs = context.obtainStyledAttributes(attrs, R.styleable.$viewClassName)")
 
@@ -293,15 +293,33 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
             viewClass.addFunction(notifyChangedFun)
         }
 
+        val delegates = delegatedMethods.map {
+            val name = it.simpleName.toString().split("$").firstOrNull().orEmpty()
+            val funBuilder = FunSpec.builder(name)
+                    .returns(it.returnType.asTypeName())
+                    .addCode("""
+                        |    return %N.$name(${it.parameters.joinToString { it.simpleName.toString() }})
+                        |
+                    """.trimMargin(), delegateProperty)
+            it.parameters.forEach { funBuilder.addParameter(it.simpleName.toString(), it.asType().asTypeName().let { if (it.toString() == "java.lang.String") ClassName("kotlin", "String") else it }) }
+            funBuilder.build()
+        }
+
+        delegates.forEach {
+            viewClass
+                    .addFunction(it)
+        }
+
         FileSpec
                 .builder(pack, viewClassName)
+                .addComment(processingEnv.options.map { (f, s) -> "$f = $s" }.joinToString("\n"))
                 .addImport(envConstants.appId, "R")
                 .addImport(name.wildswift.android.kanprocessor.utils.viewClass, "inflate")
-                .addImport("kotlinx.android.synthetic.main.$layoutName", "view.*")
+                .addImport("kotlinx.android.synthetic.main.$layoutName.view", annotation.fields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
                 .addImport("name.wildswift.android.kannotations.util", "put")
                 .addType(viewClass.build())
                 .build()
-                .writeTo(File(generationPath))
+                .writeTo(generationPath)
 
     }
 
@@ -319,7 +337,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
             val onChangedListener =
                     if (field.rwType != FieldRWType.writeOnly) {
                         PropertySpec
-                                .builder("on${field.name.capitalize()}Changed", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(fieldType)), returnType = Unit::class.asTypeName()).asNullable())
+                                .builder("on${field.name.capitalize()}Changed", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(fieldType)), returnType = Unit::class.asTypeName()).copy(nullable = true))
                                 .mutable()
                                 .initializer("null")
                                 .build()

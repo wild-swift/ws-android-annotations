@@ -19,9 +19,9 @@ package name.wildswift.android.kanprocessor
 import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ActivityField
 import name.wildswift.android.kannotations.ActivityFields
+import name.wildswift.android.kanprocessor.utils.bundleClass
 import name.wildswift.android.kanprocessor.utils.toScreamingCase
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.PrintStream
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
@@ -39,7 +39,6 @@ import javax.tools.Diagnostic
 @SupportedAnnotationTypes("name.wildswift.android.kannotations.ActivityFields", "name.wildswift.android.kannotations.ActivityField")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
-    override val tmpFileName = "__T"
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
         roundEnv.getElementsAnnotatedWith(ActivityFields::class.java).forEach {
@@ -87,7 +86,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                 .addFunction(FunSpec
                         .builder("startForResultWithOptions")
                         .addParameter(ParameterSpec.builder("requestCode", Int::class).build())
-                        .addParameter(ParameterSpec.builder("options", ClassName("android.os", "Bundle").asNullable()).build())
+                        .addParameter(ParameterSpec.builder("options", bundleClass.copy(nullable = true)).build())
                         .addCode("        if (context is Activity) {\n" +
                                 "            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {\n" +
                                 "                context.startActivityForResult(intent, requestCode, options)\n" +
@@ -105,7 +104,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .build())
                 .addFunction(FunSpec
                         .builder("startWithOptions")
-                        .addParameter(ParameterSpec.builder("options", ClassName("android.os", "Bundle").asNullable()).build())
+                        .addParameter(ParameterSpec.builder("options", bundleClass.copy(nullable = true)).build())
                         .addStatement("startForResultWithOptions(-1, options)")
                         .build())
                 .addFunction(FunSpec
@@ -134,7 +133,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                     mte.typeMirror.asTypeName()
                 }
                         .let { if (it.toString() == "java.lang.String") ClassName("kotlin", "String") else it }
-                        .let { if (fieldSpec.nullable) it.asNullable() else it }
+                        .let { if (fieldSpec.nullable) it.copy(nullable = true) else it }
                         .let { it as ClassName }
 
 
@@ -144,7 +143,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .addModifiers(KModifier.PRIVATE)
                         .receiver(ClassName(pack, className))
                         .returns(propertyType)
-                        .addStatement("return intent.extras?.get($extraName) as${if (fieldSpec.nullable) "?" else ""} ${propertyType.asNonNull().simpleName}")
+                        .addStatement("return intent.extras?.get($extraName) as${if (fieldSpec.nullable) "?" else ""} ${(propertyType.copy(nullable = false) as ClassName).simpleName}")
                         .build())
 
                 fileBuilder.addProperty(PropertySpec
@@ -187,7 +186,7 @@ class ActivityFieldsAnnotationProcessor : KotlinAbstractProcessor() {
                         .build())
                 .build()
 
-        file.writeTo(File(generationPath))
+        file.writeTo(generationPath)
     }
 
     companion object {

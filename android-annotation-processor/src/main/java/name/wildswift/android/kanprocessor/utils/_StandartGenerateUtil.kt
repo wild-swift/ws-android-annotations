@@ -34,7 +34,7 @@ fun TypeSpec.Builder.addViewConstructors(additionalCalls: FunSpec.Builder.(Int) 
                 .addFunction(
                         FunSpec.constructorBuilder()
                                 .addParameter(ParameterSpec.builder("context", contextClass).build())
-                                .addParameter(ParameterSpec.builder("attrs", ClassName("android.util", "AttributeSet").asNullable()).build())
+                                .addParameter(ParameterSpec.builder("attrs", ClassName("android.util", "AttributeSet").copy(nullable = true)).build())
                                 .callSuperConstructor("context", "attrs")
                                 .additionalCalls(2)
                                 .build()
@@ -42,7 +42,7 @@ fun TypeSpec.Builder.addViewConstructors(additionalCalls: FunSpec.Builder.(Int) 
                 .addFunction(
                         FunSpec.constructorBuilder()
                                 .addParameter(ParameterSpec.builder("context", contextClass).build())
-                                .addParameter(ParameterSpec.builder("attrs", ClassName("android.util", "AttributeSet").asNullable()).build())
+                                .addParameter(ParameterSpec.builder("attrs", ClassName("android.util", "AttributeSet").copy(nullable = true)).build())
                                 .addParameter(ParameterSpec.builder("defStyleAttr", Int::class.java).build())
                                 .callSuperConstructor("context", "attrs", "defStyleAttr")
                                 .additionalCalls(3)
@@ -62,7 +62,7 @@ fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: Property
                 .build()
 )
 
-fun generateDataClass(pack: String, className: String, inputProperties: List<PropertyData>, generationPath: String = ""): Pair<ClassName, TypeSpec?> {
+fun generateDataClass(pack: String, className: String, inputProperties: List<PropertyData>, generationPath: File): Pair<ClassName, TypeSpec?> {
     val classType = ClassName(pack, className)
     val classSpec = TypeSpec
             .classBuilder(classType)
@@ -82,12 +82,12 @@ fun generateDataClass(pack: String, className: String, inputProperties: List<Pro
             .build()
             .takeIf { inputProperties.isNotEmpty() }
 
-    if (classSpec != null && generationPath.isNotEmpty()) {
+    if (classSpec != null) {
         FileSpec
                 .builder(pack, className)
                 .addType(classSpec)
                 .build()
-                .writeTo(File(generationPath))
+                .writeTo(generationPath)
     }
     return classType to classSpec
 }
@@ -108,7 +108,7 @@ fun TypeSpec.Builder.generateViewSave(getIntState: FunSpec) = FunSpec
 
 fun TypeSpec.Builder.generateViewRestore(setIntState: FunSpec) = FunSpec
         .builder("onRestoreInstanceState")
-        .addParameter(ParameterSpec.builder("state", parcelableClass.asNullable()).build())
+        .addParameter(ParameterSpec.builder("state", parcelableClass.copy(nullable = true)).build())
         .addModifiers(KModifier.OVERRIDE)
         .addCode(CodeBlock.of("""
             |    (state as? %1T)?.also {

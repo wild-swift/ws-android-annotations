@@ -22,33 +22,18 @@ import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClassVisitor
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.PrintStream
 import javax.annotation.processing.AbstractProcessor
 import javax.lang.model.element.AnnotationValue
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.SimpleAnnotationValueVisitor7
-import javax.tools.Diagnostic
 
 /**
  * Created by swift
  */
 abstract class KotlinAbstractProcessor : AbstractProcessor() {
-    protected abstract val tmpFileName: String
-
-    val generationPath: String by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        try {
-            val sourceFile = processingEnv.filer.createSourceFile(tmpFileName)
-            val file = File(sourceFile.toUri()).parent
-            sourceFile.delete()
-            return@lazy file
-        } catch (e: Exception) {
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            e.printStackTrace(PrintStream(byteArrayOutputStream))
-            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, byteArrayOutputStream.toString())
-            throw e
-        }
+    val generationPath: File by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        File(processingEnv.options["kapt.kotlin.generated"] ?: ".")
     }
     private val intArrayVisitor = object : SimpleAnnotationValueVisitor7<IntArray, Any?>() {
         override fun visitArray(vals: MutableList<out AnnotationValue>, p: Any?) = vals.mapNotNull { it.value as? Int }.toIntArray()
@@ -58,6 +43,25 @@ abstract class KotlinAbstractProcessor : AbstractProcessor() {
     }
 
     protected fun resolveKotlinVisibility(it: TypeElement): KModifier {
+        val read = readKotlinMetadata(it)
+        var visibilityModifier = KModifier.PUBLIC
+        read?.accept(object : KmClassVisitor() {
+            override fun visit(flags: Flags, name: ClassName) {
+                if (Flag.IS_INTERNAL(flags)) {
+                    visibilityModifier = KModifier.INTERNAL
+                }
+                if (Flag.IS_PROTECTED(flags)) {
+                    visibilityModifier = KModifier.PROTECTED
+                }
+                if (Flag.IS_PRIVATE(flags)) {
+                    visibilityModifier = KModifier.PRIVATE
+                }
+            }
+        })
+        return visibilityModifier
+    }
+
+    protected fun readKotlinMetadata(it: TypeElement): KotlinClassMetadata.Class? {
         var kind: Int? = null
         var metadataVersion: IntArray? = null
         var bytecodeVersion: IntArray? = null
@@ -95,20 +99,6 @@ abstract class KotlinAbstractProcessor : AbstractProcessor() {
                 extraInt = extraInt
         )
         val read = KotlinClassMetadata.read(header) as? KotlinClassMetadata.Class
-        var visibilityModifier = KModifier.PUBLIC
-        read?.accept(object : KmClassVisitor() {
-            override fun visit(flags: Flags, name: ClassName) {
-                if (Flag.IS_INTERNAL(flags)) {
-                    visibilityModifier = KModifier.INTERNAL
-                }
-                if (Flag.IS_PROTECTED(flags)) {
-                    visibilityModifier = KModifier.PROTECTED
-                }
-                if (Flag.IS_PRIVATE(flags)) {
-                    visibilityModifier = KModifier.PRIVATE
-                }
-            }
-        })
-        return visibilityModifier
+        return read
     }
 }
