@@ -315,7 +315,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addComment(processingEnv.options.map { (f, s) -> "$f = $s" }.joinToString("\n"))
                 .addImport(envConstants.appId, "R")
                 .addImport(name.wildswift.android.kanprocessor.utils.viewClass, "inflate")
-                .addImport("kotlinx.android.synthetic.main.$layoutName.view", annotation.fields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
+                .addImport("kotlinx.android.synthetic.main.$layoutName.view", annotation.fields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + annotation.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
                 .addImport("name.wildswift.android.kannotations.util", "put")
                 .addType(viewClass.build())
                 .build()
