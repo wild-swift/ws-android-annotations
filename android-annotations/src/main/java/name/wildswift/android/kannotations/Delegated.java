@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package name.wildswift.android.kannotations;
 
-/**
- * Created by swift
- */
-public enum ViewProperty {
-    none, text, visibility, textColor, checked, timePickerHour, timePickerMinute
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+public @interface Delegated {
+
 }

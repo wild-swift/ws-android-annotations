@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Wild Swift
+ * Copyright (C) 2020 Wild Swift
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.RandomFunction
 import name.wildswift.android.kannotations.RandomFunctionType
 import name.wildswift.android.kannotations.RandomFunctions
-import java.io.File
+import name.wildswift.android.kanprocessor.utils.safeGetType
 import java.util.*
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedAnnotationTypes
@@ -28,7 +28,6 @@ import javax.annotation.processing.SupportedSourceVersion
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.MirroredTypeException
 import javax.tools.Diagnostic
 
 
@@ -38,8 +37,6 @@ import javax.tools.Diagnostic
 @SupportedAnnotationTypes("name.wildswift.android.kannotations.RandomFunctions", "name.wildswift.android.kannotations.RandomFunction")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
-    override val tmpFileName = "__R"
-
     private val randomizer by lazy { Random() }
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -93,15 +90,10 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
                     val funSpec = FunSpec.builder("${annotation.perfix}$it")
 
                     annotation.parameters.forEach { paramSpec ->
-                        val type =
-                                try {
-                                    paramSpec.type.asTypeName()
-                                } catch (mte: MirroredTypeException) {
-                                    mte.typeMirror.asTypeName()
-                                }
-                                        .let { if (paramSpec.nullable) it.asNullable() else it.asNonNull() }
-
-                        funSpec.addParameter(paramSpec.name, type)
+                        funSpec.addParameter(paramSpec.name, paramSpec
+                                .safeGetType { this.type }
+                                .copy(nullable = paramSpec.nullable)
+                        )
                     }
 
 
@@ -121,7 +113,7 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
 
         val file = fileBuilder.build()
 
-        file.writeTo(File(generationPath))
+        file.writeTo(generationPath)
     }
 
     companion object {

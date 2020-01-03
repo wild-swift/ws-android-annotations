@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Wild Swift
+ * Copyright (C) 2020 Wild Swift
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,11 @@ class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState
 
     override fun validateStateForNewInput(data: TestViewIntState): TestViewIntState {
         return data.copy(visible = if (data.check) View.VISIBLE else View.INVISIBLE)
+    }
+
+    @Delegated
+    internal fun showCustom(t: Int, p: String, a: TestViewDelegate): Int {
+        return 0
     }
 
 }

@@ -9,8 +9,8 @@ repositories {
 }
 ...
 dependencies {
-    kapt "name.wildswift.android:android-annotation-processor:0.2"
-    implementation "name.wildswift.android:android-annotations:0.2"
+    kapt "name.wildswift.android:android-annotation-processor:0.5"
+    implementation "name.wildswift.android:android-annotations:0.5"
     
     ...
 }
