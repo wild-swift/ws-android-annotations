@@ -15,6 +15,7 @@
  */
 package name.wildswift.android.kanprocessor.utils
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import javax.lang.model.type.MirroredTypeException
@@ -23,11 +24,13 @@ import kotlin.reflect.KClass
 /**
  * Created by swift
  */
-fun <T : Annotation> T.safeGetType(run: T.() -> KClass<*>) = try {
-    this.run().asTypeName()
-} catch (mte: MirroredTypeException) {
-    mte.typeMirror.asTypeName()
-}
+fun <T : Annotation> T.safeGetType(run: T.() -> KClass<*>) =
+        try {
+            this.run().asTypeName()
+        } catch (mte: MirroredTypeException) {
+            mte.typeMirror.asTypeName()
+        }
+                .let { if (it is ClassName && it.canonicalName == "java.lang.String") String::class.asTypeName() else it }
 
 fun TypeName.bundleStoreMethod(key: String, value: String) = when {
     this == Byte::class.asTypeName() -> "putByte(\"$key\", $value)"

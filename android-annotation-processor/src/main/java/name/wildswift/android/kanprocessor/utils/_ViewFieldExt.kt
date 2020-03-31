@@ -44,8 +44,25 @@ fun ViewField.resolveSetter(field: String) =
 
 fun ViewField.validateCorrectSetup(): Boolean {
     if (property == ViewProperty.none && safeGetType { type }.let { it is ClassName && it.canonicalName == "java.lang.Object" }) return false
-    if (property == ViewProperty.none && defaultValue.isEmpty()) return false
+    if (property == ViewProperty.none && resolveDefaultValue().isEmpty()) return false
     if (property == ViewProperty.none && childName.isNotEmpty() && childPropertyName.isEmpty() && childPropertySetter.isEmpty()) return false
 
-    return true;
+    return true
+}
+
+fun ViewField.resolveDefaultValue(): String {
+    if (defaultValue.isNotBlank()) return defaultValue
+    val type = safeGetType { type }
+    if (type !is ClassName) return defaultValue
+    return when (type.canonicalName) {
+        Boolean::class.qualifiedName -> "false"
+        Float::class.qualifiedName -> "0.0f"
+        Double::class.qualifiedName -> "0.0"
+        Int::class.qualifiedName -> "0"
+        Long::class.qualifiedName -> "0L"
+        Short::class.qualifiedName -> "0"
+        Byte::class.qualifiedName -> "0"
+        String::class.qualifiedName -> "\"\""
+        else -> defaultValue
+    }
 }

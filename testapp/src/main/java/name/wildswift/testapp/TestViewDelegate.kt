@@ -34,7 +34,15 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
             ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label"),
             ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
             ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
-            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check")
+            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check"),
+            ViewField(name = "booleanField", type = Boolean::class),
+            ViewField(name = "floatField", type = Float::class),
+            ViewField(name = "doubleField", type = Double::class),
+            ViewField(name = "intField", type = Int::class),
+            ViewField(name = "longField", type = Long::class),
+            ViewField(name = "shortField", type = Short::class),
+            ViewField(name = "byteField", type = Byte::class),
+            ViewField(name = "stringField", type = String::class)
         ]
 )
 class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState>(view) {

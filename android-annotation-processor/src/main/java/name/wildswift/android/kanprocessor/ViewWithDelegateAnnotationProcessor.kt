@@ -89,7 +89,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 ?: viewClassName.toViewResourceName()
 
         if (annotation.fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
-        if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
+        if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Events not configured properly for class $pack.$className")
 
         val delegateType = ClassName(pack, className)
         val delegateProperty = PropertySpec.builder("delegate", delegateType).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateType).build()
@@ -99,8 +99,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .map {
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { type },
-                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.defaultValue
+                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { this.type },
+                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
                     )
                 }
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
@@ -322,6 +322,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .writeTo(generationPath)
 
     }
+
 
     private fun createNotifyChanged(fields: List<ViewField>, internalModelType: ClassName, internalModelProperty: PropertySpec, delegateProperty: PropertySpec, viewClass: TypeSpec.Builder): FunSpec {
         val notifyChangedOldModel = ParameterSpec.builder("oldModel", internalModelType).build()
