@@ -103,8 +103,50 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                             if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
                     )
                 }
+
+        val modelProperties = annotation
+                .fields
+                .filter { it.publicAccess }
+                .map {
+                    PropertyData(
+                            it.name,
+                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { this.type },
+                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
+                    )
+                }
+
+        val (publicModelType, publicModelClass) = generateDataClass(pack, "${viewClassName}Model", modelProperties, generationPath)
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
         val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, annotation.fields, delegateProperty) }
+
+        val onPublicModelChangedListener =
+                if (publicModelClass != null) {
+                    PropertySpec
+                            .builder("onViewModelChanged", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(publicModelType)), returnType = Unit::class.asTypeName()).copy(nullable = true))
+                            .mutable()
+                            .initializer("null")
+                            .build()
+                } else {
+                    null
+                }
+
+        val publicModelProperty =
+                if (publicModelClass != null)
+                    PropertySpec
+                            .builder("viewModel", publicModelType)
+                            .getter(FunSpec.getterBuilder().addStatement("return %1T(${modelProperties.joinToString { "${it.name} = %2N.${it.name}" }})", publicModelType, internalModelProperty!!).build())
+                            .mutable()
+                            .setter(
+                                    FunSpec.setterBuilder()
+                                            .addParameter(ParameterSpec.builder("value", publicModelType).build())
+                                            .addStatement("if (${modelProperties.joinToString(" && ") { "%1N.${it.name} == value.${it.name}" }}) return", internalModelProperty)
+                                            .addStatement("%1N = %2N.validateStateForNewInput(%1N.copy(${modelProperties.joinToString { "${it.name} = value.${it.name}" }}))", internalModelProperty, delegateProperty)
+                                            .addStatement("%1N?.invoke(value)", onPublicModelChangedListener!!)
+                                            .build()
+                            )
+                            .build()
+                else
+                    null
 
         val saveStateMethod =
                 if (annotation.fields.isNotEmpty()) {
@@ -163,6 +205,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addProperty(delegateProperty)
                 .apply {
                     if (internalModelProperty != null) addProperty(internalModelProperty)
+                    if (publicModelProperty != null) addProperty(publicModelProperty)
+                    if (onPublicModelChangedListener != null) addProperty(onPublicModelChangedListener)
                 }
 
 
@@ -170,7 +214,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .fields
                 .filter { it.publicAccess }
                 .takeIf { it.isNotEmpty() }
-                ?.let { createNotifyChanged(it, internalModelType, internalModelProperty!!, delegateProperty, viewClass) }
+                ?.let { createNotifyChanged(it, internalModelType, internalModelProperty!!, publicModelType, onPublicModelChangedListener, delegateProperty, viewClass) }
 
 
         annotation
@@ -321,7 +365,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
     }
 
 
-    private fun createNotifyChanged(fields: List<ViewField>, internalModelType: ClassName, internalModelProperty: PropertySpec, delegateProperty: PropertySpec, viewClass: TypeSpec.Builder): FunSpec {
+    private fun createNotifyChanged(fields: List<ViewField>, internalModelType: ClassName, internalModelProperty: PropertySpec, publicModelType: ClassName, publicModelChangedListener: PropertySpec?, delegateProperty: PropertySpec, viewClass: TypeSpec.Builder): FunSpec {
         val notifyChangedOldModel = ParameterSpec.builder("oldModel", internalModelType).build()
         val notifyChangedCurrentModel = ParameterSpec.builder("currentModel", internalModelType).build()
         val notifyChangedFunBuilder = FunSpec
@@ -329,6 +373,12 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addModifiers(KModifier.PRIVATE)
                 .addParameter(notifyChangedOldModel)
                 .addParameter(notifyChangedCurrentModel)
+                .apply {
+                    if (publicModelChangedListener != null) {
+                        addStatement("if (${fields.filter { it.publicAccess }.joinToString(" || ") { "%1N.${it.name} != %2N.${it.name}" }}) %3N?.invoke(%4T(${fields.filter { it.publicAccess }.joinToString { "${it.name} = %2N.${it.name}" }}))", notifyChangedOldModel, notifyChangedCurrentModel, publicModelChangedListener, publicModelType)
+                    }
+                }
+
 
         fields.forEach { field ->
             val fieldType = if (field.property != ViewProperty.none) field.property.getType() else field.safeGetType { type }
