@@ -31,10 +31,15 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
             ViewAttribute(reference = AttrRNames.textIn, type = AttributeType.enum_)
         ],
         fields = [
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label"),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label", rwType = FieldRWType.readWrite),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = FieldRWType.readWrite),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = FieldRWType.readWrite),
+            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundDrawable, name = "labelBGDrawable"),
             ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
             ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
-            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check"),
+            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = FieldRWType.readWrite),
+            ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageDrawable, name = "imageAsDrawable"),
+            ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageResource, name = "imageAsResource"),
             ViewField(name = "booleanField", type = Boolean::class),
             ViewField(name = "floatField", type = Float::class),
             ViewField(name = "doubleField", type = Double::class),
@@ -43,6 +48,9 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
             ViewField(name = "shortField", type = Short::class),
             ViewField(name = "byteField", type = Byte::class),
             ViewField(name = "stringField", type = String::class)
+        ],
+        events = [
+            ViewEvent(name = "onLabelClick", childName = IdRNames.vtLabel, listener = ViewListener.onClick)
         ]
 )
 class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState>(view) {

@@ -52,7 +52,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
     override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment): Boolean {
         val appId = processingEnv.options["application.id"]
-                ?: throw IllegalArgumentException("Argument \"application.id\" is not set.")
+                ?: throw IllegalArgumentException("Argument \"application.id\" is not set. Please add \"kapt\" -> \"arguments\" -> \"arg(\"application.id\", <value>)\"")
         val envConstants = ProcessingEnvConstants(
                 appId = appId
         )
@@ -193,8 +193,8 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                         .also { codeBlockBuilder ->
                             annotation
                                     .events
-                                    .forEach {
-                                        codeBlockBuilder.add(it.childName.let { if (it.isEmpty()) "" else "$it." } + it.resolveListener("${it.name}?.invoke()"))
+                                    .forEach { event ->
+                                        codeBlockBuilder.add(event.childName.let { if (it.isEmpty()) "" else "$it." } + event.resolveListener("${event.name}?.invoke()"))
                                     }
                         }
                         .also { codeBlockBuilder ->
@@ -211,13 +211,13 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                             if (listenerGroup.isNotEmpty()) {
                                                 listenerGroup
                                                         .mapNotNull { property -> propertiesList.find { it.property == property } }
-                                                        .let {
+                                                        .let { viewField ->
                                                             """
-                                                                |    if (${it.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) {
+                                                                |    if (${viewField.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) {
                                                                 |        val oldModel = %1N
                                                                 |        %1N = %2N.validateStateForOutput(
                                                                 |                %1N.copy(
-                                                                |${it.joinToString(separator = ",\n") { "                    ${it.name} = ${it.property.getListenerPropertyName()}" }}
+                                                                |${viewField.joinToString(separator = ",\n") { "                    ${it.name} = ${it.property.getListenerPropertyName()}" }}
                                                                 |                )
                                                                 |        )
                                                                 |        %2N.onNewInternalState(%1N)
@@ -226,14 +226,11 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                                 |
                                                         """.trimMargin()
                                                         }
-                                                        .let { listenerGroup.first().buildListener(it) }
-                                                        .let { "$child.$it" }
-                                                        .also {
-                                                            codeBlockBuilder.add(it, internalModelProperty!!, delegateProperty, notifyChangedFun)
-
-                                                        }
+                                                        .also { listenerGroup.first().buildListener(child, it, internalModelProperty!!, delegateProperty, notifyChangedFun, codeBlockBuilder) }
 
                                                 propertiesList = propertiesList.filter { !listenerGroup.contains(it.property) }
+                                            } else {
+                                                propertiesList = propertiesList.drop(1)
                                             }
                                         }
                                     }

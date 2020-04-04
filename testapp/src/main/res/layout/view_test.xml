@@ -32,4 +32,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom" />
+
+    <ImageView
+        android:id="@+id/vtImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </merge>

@@ -53,6 +53,9 @@ val contextClass = ClassName("android.content", "Context")
 val viewClass = ClassName("android.view", "View")
 val parcelableClass = ClassName("android.os", "Parcelable")
 val bundleClass = ClassName("android.os", "Bundle")
+val drawableClass = ClassName("android.graphics.drawable", "Drawable")
+val textWatcherClass = ClassName("android.text", "TextWatcher")
+val editableClass = ClassName("android.text", "Editable")
 
 fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: PropertySpec, delegatedName: String) = addFunction(
         FunSpec.builder(methodName)

@@ -19,5 +19,6 @@ package name.wildswift.android.kannotations;
  * Created by swift
  */
 public enum ViewProperty {
-    none, text, visibility, textColor, checked, timePickerHour, timePickerMinute
+    none, text, visibility, textColor, checked, timePickerHour, timePickerMinute,
+    imageResource, imageDrawable, backgroundResource, backgroundColor, backgroundDrawable
 }

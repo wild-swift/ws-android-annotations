@@ -16,6 +16,9 @@
 
 package name.wildswift.android.kanprocessor.utils
 
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.asTypeName
 import name.wildswift.android.kannotations.ViewProperty
 
@@ -30,6 +33,11 @@ fun ViewProperty.getType() = when (this) {
     ViewProperty.checked -> Boolean::class.asTypeName()
     ViewProperty.timePickerHour -> Int::class.asTypeName()
     ViewProperty.timePickerMinute -> Int::class.asTypeName()
+    ViewProperty.imageResource -> Int::class.asTypeName()
+    ViewProperty.imageDrawable -> drawableClass.copy(nullable = true)
+    ViewProperty.backgroundResource -> Int::class.asTypeName()
+    ViewProperty.backgroundColor -> Int::class.asTypeName()
+    ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
 }
 
 fun ViewProperty.getDefaultValue() = when (this) {
@@ -41,33 +49,74 @@ fun ViewProperty.getDefaultValue() = when (this) {
     ViewProperty.checked -> "false"
     ViewProperty.timePickerHour -> "0"
     ViewProperty.timePickerMinute -> "0"
+    ViewProperty.imageResource -> "0"
+    ViewProperty.imageDrawable -> "null"
+    ViewProperty.backgroundResource -> "0"
+    ViewProperty.backgroundColor -> "0"
+    ViewProperty.backgroundDrawable -> "null"
 }
 
 fun ViewProperty.getListenerGroup() = when (this) {
     ViewProperty.none -> arrayOf()
     ViewProperty.text -> arrayOf(ViewProperty.text)
-    ViewProperty.visibility -> arrayOf(ViewProperty.visibility)
-    ViewProperty.textColor -> arrayOf(ViewProperty.textColor)
     ViewProperty.checked -> arrayOf(ViewProperty.checked)
     ViewProperty.timePickerHour -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
     ViewProperty.timePickerMinute -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
+    ViewProperty.visibility -> arrayOf()
+    ViewProperty.textColor -> arrayOf()
+    ViewProperty.imageResource -> arrayOf()
+    ViewProperty.imageDrawable -> arrayOf()
+    ViewProperty.backgroundResource -> arrayOf()
+    ViewProperty.backgroundColor -> arrayOf()
+    ViewProperty.backgroundDrawable -> arrayOf()
 }
 
-fun ViewProperty.buildListener(body: String) = when (this) {
-    ViewProperty.text -> ""
-    ViewProperty.checked -> ""
-    ViewProperty.timePickerHour, ViewProperty.timePickerMinute -> """
-        |setOnTimeChangedListener { _, hour, minute ->
-        |$body
-        |}
-        |
-    """.trimMargin()
-    else -> ""
+// TODO make more pretty
+fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty1: PropertySpec, bodyCodeProperty2: PropertySpec, bodyCodeProperty3: FunSpec?, codeBlockBuilder: CodeBlock.Builder) {
+    when (this) {
+        ViewProperty.text -> {
+            codeBlockBuilder.add("""
+                |$childName.addTextChangedListener(object : %4T {
+                |    override fun afterTextChanged(text: %5T) {
+                |    $body
+                |    }
+                |
+                |    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                |    
+                |    }
+                |   
+                |    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                |   
+                |    }
+                |})
+                |
+            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, textWatcherClass, editableClass)
+        }
+        ViewProperty.checked -> {
+            codeBlockBuilder.add("""
+                    |$childName.setOnCheckedChangeListener { _, isChecked ->
+                    |    $body
+                    |}
+                    |
+                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+        }
+        ViewProperty.timePickerHour, ViewProperty.timePickerMinute -> {
+            codeBlockBuilder.add("""
+                    |$childName.setOnTimeChangedListener { _, hour, minute ->
+                    |$body
+                    |}
+                    |
+                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+        }
+        else -> {
+
+        }
+    }
 }
 
 fun ViewProperty.getListenerPropertyName() = when (this) {
     ViewProperty.text -> "text.toString()"
-    ViewProperty.checked -> "checked"
+    ViewProperty.checked -> "isChecked"
     ViewProperty.timePickerHour -> "hour"
     ViewProperty.timePickerMinute -> "minute"
     else -> ""

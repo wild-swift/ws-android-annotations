@@ -33,6 +33,11 @@ fun ViewField.resolveSetter(field: String) =
                 ViewProperty.checked -> "isChecked = $field"
                 ViewProperty.timePickerHour -> "hour = $field"
                 ViewProperty.timePickerMinute -> "minute = $field"
+                ViewProperty.imageResource -> "setImageResource($field)"
+                ViewProperty.imageDrawable -> "setImageDrawable($field)"
+                ViewProperty.backgroundResource -> "setBackgroundResource($field)"
+                ViewProperty.backgroundColor -> "setBackgroundColor($field)"
+                ViewProperty.backgroundDrawable -> "setBackground($field)"
             }
         } else {
             if (childPropertyName.isNotEmpty()) {
