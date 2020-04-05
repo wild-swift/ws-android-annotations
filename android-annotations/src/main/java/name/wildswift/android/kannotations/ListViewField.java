@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package name.wildswift.android.kannotations;
 
 import java.lang.annotation.ElementType;
@@ -20,15 +21,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Created by swift
- */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface ViewAttribute {
-    String reference();
+public @interface ListViewField {
+    String name();
 
-    AttributeType type();
+    boolean isPublic() default true;
 
-    String fieldName() default "";
+    Class elementType() default Object.class;
+
+    String childView() default "";
+
+    ListImplementation listImplementation() default ListImplementation.RecyclerView;
+
+    Class viewForElementClass() default Object.class;
+
 }

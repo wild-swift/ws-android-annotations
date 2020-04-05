@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package name.wildswift.android.kannotations;
 
 import java.lang.annotation.ElementType;
@@ -25,10 +26,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface ViewAttribute {
-    String reference();
+public @interface Attributes {
 
-    AttributeType type();
-
-    String fieldName() default "";
+    ViewAttribute[] value();
 }

@@ -31,6 +31,10 @@ public @interface ViewField {
     Class type() default Object.class;
     String defaultValue() default "";
 
+    boolean publicAccess() default true;
+
+    FieldRWType rwType() default FieldRWType.writeOnly;
+
     // change child properties
     String childName() default "";
 
@@ -39,7 +43,5 @@ public @interface ViewField {
     String childPropertyName() default "";
     String childPropertySetter() default "";
 
-    boolean publicAccess() default true;
 
-    FieldRWType rwType() default FieldRWType.writeOnly;
 }

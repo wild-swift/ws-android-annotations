@@ -72,30 +72,34 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 val className = simpleName.toString()
                 val packageName = processingEnv.elementUtils.getPackageOf(this).toString()
                 val metadata = this.getAnnotation(ViewWithDelegate::class.java)
+                val attrs = this.getAnnotationsByType(Attributes::class.java).flatMap { it.value.asIterable() } + this.getAnnotationsByType(ViewAttribute::class.java)
+                val events = this.getAnnotationsByType(Events::class.java).flatMap { it.value.asIterable() } + this.getAnnotationsByType(ViewEvent::class.java)
+                val fields = this.getAnnotationsByType(Fields::class.java).flatMap { it.value.asIterable() } + this.getAnnotationsByType(ViewField::class.java)
+                val listFields = this.getAnnotationsByType(ListingsFields::class.java).flatMap { it.value.asIterable() } + this.getAnnotationsByType(ListViewField::class.java)
                 val visibilityModifier = resolveKotlinVisibility(this)
                 val delegatedMethods = enclosedElements.filter { it.getAnnotation(Delegated::class.java) != null }.filterIsInstance<ExecutableElement>()
-                writeExtensionsFile(className, packageName, metadata, visibilityModifier, envConstants, delegatedMethods)
+                writeExtensionsFile(metadata, attrs, events, fields, listFields, delegatedMethods, className, packageName, visibilityModifier, envConstants)
             }
         }
         return true
     }
 
-    private fun writeExtensionsFile(className: String, pack: String, annotation: ViewWithDelegate, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants, delegatedMethods: List<ExecutableElement>) {
-        val viewClassName = annotation.name.takeIf { it.isNotBlank() }
+    private fun writeExtensionsFile(rootAnnotation: ViewWithDelegate, attrs: List<ViewAttribute>, events: List<ViewEvent>, basicFields: List<ViewField>, listFields: List<ListViewField>, delegatedMethods: List<ExecutableElement>,
+                                    className: String, pack: String, visibilityModifier: KModifier, envConstants: ProcessingEnvConstants) {
+        val viewClassName = rootAnnotation.name.takeIf { it.isNotBlank() }
                 ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                 ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $pack.$className")
 
-        val layoutName = annotation.layoutResourceName.takeIf { it.isNotEmpty() }
+        val layoutName = rootAnnotation.layoutResourceName.takeIf { it.isNotEmpty() }
                 ?: viewClassName.toViewResourceName()
 
-        if (annotation.fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
-        if (annotation.events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Events not configured properly for class $pack.$className")
+        if (basicFields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $pack.$className")
+        if (events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Events not configured properly for class $pack.$className")
 
         val delegateType = ClassName(pack, className)
         val delegateProperty = PropertySpec.builder("delegate", delegateType).addModifiers(KModifier.PRIVATE).initializer("%T(this)", delegateType).build()
 
-        val internalProperties = annotation
-                .fields
+        val internalProperties = basicFields
                 .map {
                     PropertyData(
                             it.name,
@@ -104,8 +108,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     )
                 }
 
-        val modelProperties = annotation
-                .fields
+        val modelProperties = basicFields
                 .filter { it.publicAccess }
                 .map {
                     PropertyData(
@@ -117,7 +120,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         val (publicModelType, publicModelClass) = generateDataClass(pack, "${viewClassName}Model", modelProperties, generationPath)
         val (internalModelType, internalModelClass) = generateDataClass(pack, "${viewClassName}IntState", internalProperties, generationPath)
-        val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, annotation.fields, delegateProperty) }
+        val internalModelProperty = internalModelClass?.let { internalModelProperty(internalModelType, basicFields, delegateProperty) }
 
         val onPublicModelChangedListener =
                 if (publicModelClass != null) {
@@ -149,7 +152,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     null
 
         val saveStateMethod =
-                if (annotation.fields.isNotEmpty()) {
+                if (basicFields.isNotEmpty()) {
                     FunSpec
                             .builder("getState")
                             .addModifiers(KModifier.PRIVATE)
@@ -168,7 +171,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 }
 
         val restoreStateMethod =
-                if (annotation.fields.isNotEmpty()) {
+                if (basicFields.isNotEmpty()) {
                     FunSpec
                             .builder("setState")
                             .addModifiers(KModifier.PRIVATE)
@@ -195,9 +198,9 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val viewClass = TypeSpec
                 .classBuilder(ClassName(pack, viewClassName))
                 .addModifiers(visibilityModifier)
-                .superclass(annotation.safeGetType { parent })
+                .superclass(rootAnnotation.safeGetType { parent })
                 .addViewConstructors {
-                    if (annotation.attrs.isNotEmpty() && it > 1) {
+                    if (attrs.isNotEmpty() && it > 1) {
                         addStatement("setAttrs(context, attrs)")
                     }
                     this
@@ -210,16 +213,13 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 }
 
 
-        val notifyChangedFun = annotation
-                .fields
+        val notifyChangedFun = basicFields
                 .filter { it.publicAccess }
                 .takeIf { it.isNotEmpty() }
                 ?.let { createNotifyChanged(it, internalModelType, internalModelProperty!!, publicModelType, onPublicModelChangedListener, delegateProperty, viewClass) }
 
 
-        annotation
-                .events
-                .forEach {
+        events.forEach {
                     PropertySpec
                             .builder(it.name, LambdaTypeName.get(returnType = Unit::class.asTypeName()).copy(nullable = true))
                             .mutable()
@@ -235,15 +235,12 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                         .addStatement("inflate(context, R.layout.$layoutName, this)")
                         .addStatement("%1N.setupView()", delegateProperty)
                         .also { codeBlockBuilder ->
-                            annotation
-                                    .events
-                                    .forEach { event ->
+                            events.forEach { event ->
                                         codeBlockBuilder.add(event.childName.let { if (it.isEmpty()) "" else "$it." } + event.resolveListener("${event.name}?.invoke()"))
                                     }
                         }
                         .also { codeBlockBuilder ->
-                            annotation
-                                    .fields
+                            basicFields
                                     .filter { it.childName.isNotEmpty() }
                                     .filter { it.rwType != FieldRWType.writeOnly }
                                     .groupBy { it.childName }
@@ -284,7 +281,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         )
 
 
-        if (annotation.attrs.isNotEmpty()) {
+        if (attrs.isNotEmpty()) {
             val setAttrsFun = FunSpec
                     .builder("setAttrs")
                     .addModifiers(KModifier.PRIVATE)
@@ -293,9 +290,9 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     .addStatement("if (attrs == null) return")
                     .addStatement("val styleAttrs = context.obtainStyledAttributes(attrs, R.styleable.$viewClassName)")
 
-            annotation.attrs.forEach {
+            attrs.forEach {
                 val propertyName = if (it.fieldName.isBlank()) it.reference else it.fieldName
-                if (annotation.fields.find { it.publicAccess && it.name == propertyName } == null) {
+                if (basicFields.find { it.publicAccess && it.name == propertyName } == null) {
                     viewClass.addProperty(PropertySpec
                             .builder(propertyName, it.type.fieldClass())
                             .mutable()
@@ -318,14 +315,14 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         if (saveStateMethod != null) {
             viewClass.addFunction(saveStateMethod)
-            if (annotation.saveInstanceState) {
+            if (rootAnnotation.saveInstanceState) {
                 viewClass.generateViewSave(saveStateMethod)
             }
         }
 
         if (restoreStateMethod != null) {
             viewClass.addFunction(restoreStateMethod)
-            if (annotation.saveInstanceState) {
+            if (rootAnnotation.saveInstanceState) {
                 viewClass.generateViewRestore(restoreStateMethod)
             }
         }
@@ -356,7 +353,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addComment(processingEnv.options.map { (f, s) -> "$f = $s" }.joinToString("\n"))
                 .addImport(envConstants.appId, "R")
                 .addImport(name.wildswift.android.kanprocessor.utils.viewClass, "inflate")
-                .addImport("kotlinx.android.synthetic.main.$layoutName.view", annotation.fields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + annotation.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
+                .addImport("kotlinx.android.synthetic.main.$layoutName.view", basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + events.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
                 .addImport("name.wildswift.android.kannotations.util", "put")
                 .addType(viewClass.build())
                 .build()
@@ -424,7 +421,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         return notifyChangedFunBuilder.build()
     }
 
-    private fun internalModelProperty(modelType: ClassName, fieldsToSet: Array<ViewField>, delegateProperty: PropertySpec): PropertySpec {
+    private fun internalModelProperty(modelType: ClassName, fieldsToSet: List<ViewField>, delegateProperty: PropertySpec): PropertySpec {
         return PropertySpec.builder("intModel", modelType)
                 .mutable()
                 .addModifiers(KModifier.PRIVATE)

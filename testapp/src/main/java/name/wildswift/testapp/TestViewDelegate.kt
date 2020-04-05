@@ -25,33 +25,33 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
  */
 @ViewWithDelegate(
         parent = FrameLayout::class,
-        layoutResourceName = LayoutRNames.view_test,
-        attrs = [
-            ViewAttribute(reference = AttrRNames.visibleColor, type = AttributeType.color),
-            ViewAttribute(reference = AttrRNames.textIn, type = AttributeType.enum_)
-        ],
-        fields = [
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label", rwType = FieldRWType.readWrite),
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = FieldRWType.readWrite),
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = FieldRWType.readWrite),
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundDrawable, name = "labelBGDrawable"),
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
-            ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
-            ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = FieldRWType.readWrite),
-            ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageDrawable, name = "imageAsDrawable"),
-            ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageResource, name = "imageAsResource"),
-            ViewField(name = "booleanField", type = Boolean::class),
-            ViewField(name = "floatField", type = Float::class),
-            ViewField(name = "doubleField", type = Double::class),
-            ViewField(name = "intField", type = Int::class),
-            ViewField(name = "longField", type = Long::class),
-            ViewField(name = "shortField", type = Short::class),
-            ViewField(name = "byteField", type = Byte::class),
-            ViewField(name = "stringField", type = String::class)
-        ],
-        events = [
-            ViewEvent(name = "onLabelClick", childName = IdRNames.vtLabel, listener = ViewListener.onClick)
-        ]
+        layoutResourceName = LayoutRNames.view_test
+)
+@Events(
+        ViewEvent(name = "onLabelClick", childName = IdRNames.vtLabel, listener = ViewListener.onClick)
+)
+@Attributes(
+        ViewAttribute(reference = AttrRNames.visibleColor, type = AttributeType.color),
+        ViewAttribute(reference = AttrRNames.textIn, type = AttributeType.enum_)
+)
+@Fields(
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundDrawable, name = "labelBGDrawable"),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
+        ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageDrawable, name = "imageAsDrawable"),
+        ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageResource, name = "imageAsResource"),
+        ViewField(name = "booleanField", type = Boolean::class),
+        ViewField(name = "floatField", type = Float::class),
+        ViewField(name = "doubleField", type = Double::class),
+        ViewField(name = "intField", type = Int::class),
+        ViewField(name = "longField", type = Long::class),
+        ViewField(name = "shortField", type = Short::class),
+        ViewField(name = "byteField", type = Byte::class),
+        ViewField(name = "stringField", type = String::class)
 )
 class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState>(view) {
     override fun setupView() {
