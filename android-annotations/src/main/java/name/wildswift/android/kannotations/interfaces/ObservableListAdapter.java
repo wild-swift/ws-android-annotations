@@ -16,13 +16,14 @@
 
 package name.wildswift.android.kannotations.interfaces;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ObservableListAdapter<T> implements ItemsDataSource<T> {
     protected final List<T> wrapped;
 
-    protected List<ItemsObserver> observers = new ArrayList<>();
+    protected List<WeakReference<ItemsObserver>> observers = new ArrayList<>();
 
     public ObservableListAdapter(List<T> wrapped) {
         this.wrapped = wrapped;
@@ -40,39 +41,52 @@ public class ObservableListAdapter<T> implements ItemsDataSource<T> {
 
     @Override
     public void addObserver(ItemsObserver observer) {
-        observers.add(observer);
+        observers.add(new WeakReference<ItemsObserver>(observer));
     }
 
     @Override
     public void removeObserver(ItemsObserver observer) {
-        observers.remove(observer);
+        for (int i = 0; i < observers.size(); i++) {
+            WeakReference<ItemsObserver> observerRef = observers.get(i);
+            if (observerRef.get() == null || observerRef.get() == observer) {
+                observers.remove(observerRef);
+            }
+        }
     }
 
     protected void notifyItemInserted(int index) {
-        List<ItemsObserver> observers = new ArrayList<>(this.observers);
-        for (ItemsObserver observer : observers) {
-            observer.onItemInserted(index);
+        List<WeakReference<ItemsObserver>> observers = new ArrayList<>(this.observers);
+        for (WeakReference<ItemsObserver> observer : observers) {
+            ItemsObserver itemsObserver = observer.get();
+            if (itemsObserver == null) continue;
+            itemsObserver.onItemInserted(index);
         }
     }
 
     protected void notifyItemRemoved(int index) {
-        List<ItemsObserver> observers = new ArrayList<>(this.observers);
-        for (ItemsObserver observer : observers) {
-            observer.onItemRemoved(index);
+        List<WeakReference<ItemsObserver>> observers = new ArrayList<>(this.observers);
+        for (WeakReference<ItemsObserver> observer : observers) {
+            ItemsObserver itemsObserver = observer.get();
+            if (itemsObserver == null) continue;
+            itemsObserver.onItemRemoved(index);
         }
     }
 
     protected void notifyItemChanged(int index) {
-        List<ItemsObserver> observers = new ArrayList<>(this.observers);
-        for (ItemsObserver observer : observers) {
-            observer.onItemChanged(index);
+        List<WeakReference<ItemsObserver>> observers = new ArrayList<>(this.observers);
+        for (WeakReference<ItemsObserver> observer : observers) {
+            ItemsObserver itemsObserver = observer.get();
+            if (itemsObserver == null) continue;
+            itemsObserver.onItemChanged(index);
         }
     }
 
     protected void notifyItemsReloaded() {
-        List<ItemsObserver> observers = new ArrayList<>(this.observers);
-        for (ItemsObserver observer : observers) {
-            observer.onItemsReloaded();
+        List<WeakReference<ItemsObserver>> observers = new ArrayList<>(this.observers);
+        for (WeakReference<ItemsObserver> observer : observers) {
+            ItemsObserver itemsObserver = observer.get();
+            if (itemsObserver == null) continue;
+            itemsObserver.onItemsReloaded();
         }
     }
 }

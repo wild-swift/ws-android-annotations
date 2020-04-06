@@ -43,7 +43,7 @@ fun ListViewField.getAdapterViewType(typeMapping: Map<String, ViewWithDelegateGe
 }
 
 fun ListViewField.buildSetViewModelStatement(typeMapping: Map<String, ViewWithDelegateGenerationData>, value: String): String {
-    if (!checkIsVoid { delegateClass }) return "viewModel = $value"
+    if (!checkIsVoid { delegateClass }) return "viewModel·=·$value"
     if (modelSetterName.isNotEmpty()) return "$modelSetterName($value)"
-    return "$modelFieldName = $value"
+    return "$modelFieldName·=·$value"
 }

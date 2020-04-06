@@ -57,8 +57,10 @@ val textWatcherClass = ClassName("android.text", "TextWatcher")
 val editableClass = ClassName("android.text", "Editable")
 val itemsDSClass = ClassName("name.wildswift.android.kannotations.interfaces", "ItemsDataSource")
 val emptyIDSClass = ClassName("name.wildswift.android.kannotations.interfaces", "EmptyItemsDataSource")
-val baseAdapter = ClassName("android.widget", "BaseAdapter")
-val recyclerAdapter = ClassName("androidx.recyclerview.widget", "RecyclerView", "Adapter")
+val itemsObserverClass = ClassName("name.wildswift.android.kannotations.interfaces", "ItemsObserver")
+val baseAdapterClass = ClassName("android.widget", "BaseAdapter")
+val dataSetObserverClass = ClassName("android.database", "DataSetObserver")
+val recyclerAdapterClass = ClassName("androidx.recyclerview.widget", "RecyclerView", "Adapter")
 
 
 fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: PropertySpec, delegatedName: String) = addFunction(

@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
+import name.wildswift.android.kanprocessor.ListAdapterGenerator.buildOldAdapterClass
 import name.wildswift.android.kanprocessor.datahelpers.PropertyData
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
 import name.wildswift.android.kanprocessor.generators.DataClassGenerator.generateDataClass
@@ -305,57 +306,19 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         data.listFields
                 .forEach { listField ->
                     viewClassSpec.addType(
-                            TypeSpec
-                                    .classBuilder(listField.name.capitalize() + "Adapter")
-                                    .addModifiers(KModifier.PRIVATE, KModifier.INNER)
-                                    .also { builder ->
-                                        val adapterViewType = listField.getAdapterViewType(processingTypeMap)
-                                        when (listField.listImplementation) {
-                                            ListImplementation.ListView -> {
-                                                builder.superclass(baseAdapter)
-                                                        .addFunction(
-                                                                FunSpec.builder("getView")
-                                                                        .addModifiers(KModifier.OVERRIDE)
-                                                                        .addParameter(ParameterSpec.builder("index", INT).build())
-                                                                        .addParameter(ParameterSpec.builder("reuse", viewClass.copy(nullable = true)).build())
-                                                                        .addParameter(ParameterSpec.builder("parent", viewGroupClass).build())
-                                                                        .returns(viewClass)
-                                                                        .addStatement("val view = reuse as? %1T ?: %1T(context)", adapterViewType)
-                                                                        .addStatement("view.${listField.buildSetViewModelStatement(processingTypeMap, "%N.${listField.name}[index]")}", internalModelProperty!!)
-                                                                        .addStatement("return view")
-                                                                        .build()
-                                                        )
-                                                        .addFunction(
-                                                                FunSpec.builder("getItem")
-                                                                        .addModifiers(KModifier.OVERRIDE)
-                                                                        .addParameter(ParameterSpec.builder("index", INT).build())
-                                                                        .returns(ANY)
-                                                                        .addStatement("return %N.${listField.name}[index]", internalModelProperty!!)
-                                                                        .build()
-                                                        )
-                                                        .addFunction(
-                                                                FunSpec.builder("getItemId")
-                                                                        .addModifiers(KModifier.OVERRIDE)
-                                                                        .addParameter(ParameterSpec.builder("index", INT).build())
-                                                                        .returns(LONG)
-                                                                        .addStatement("return index.toLong()")
-                                                                        .build()
-                                                        )
-                                                        .addFunction(
-                                                                FunSpec.builder("getCount")
-                                                                        .addModifiers(KModifier.OVERRIDE)
-                                                                        .returns(INT)
-                                                                        .addStatement("return %N.${listField.name}.size", internalModelProperty)
-                                                                        .build()
-                                                        )
+                            when (listField.listImplementation) {
+                                ListImplementation.ListView -> {
+                                    buildOldAdapterClass(listField, processingTypeMap)
+                                }
+                                ListImplementation.RecyclerView -> {
+                                    TypeSpec
+                                            .classBuilder(listField.name.capitalize() + "Adapter")
+                                            .addModifiers(KModifier.PRIVATE, KModifier.INNER)
+                                            .also { builder ->
                                             }
-                                            ListImplementation.RecyclerView -> {
-
-                                            }
-                                        }
-                                    }
-
-                                    .build()
+                                            .build()
+                                }
+                            }
                     )
                 }
 
@@ -374,6 +337,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .writeTo(generationPath)
 
     }
+
 
     private fun createNotifyChanged(fields: List<ViewField>, internalModelType: ClassName, internalModelProperty: PropertySpec, publicModelType: ClassName, publicModelChangedListener: PropertySpec?, delegateProperty: PropertySpec, viewClass: TypeSpec.Builder): FunSpec {
         val notifyChangedOldModel = ParameterSpec.builder("oldModel", internalModelType).build()
