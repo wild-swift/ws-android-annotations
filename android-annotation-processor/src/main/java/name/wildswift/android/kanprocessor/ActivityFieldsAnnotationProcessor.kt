@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ActivityField
 import name.wildswift.android.kannotations.ActivityFields
 import name.wildswift.android.kanprocessor.utils.bundleClass
+import name.wildswift.android.kanprocessor.utils.resolveKotlinVisibility
 import name.wildswift.android.kanprocessor.utils.toScreamingCase
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream

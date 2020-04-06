@@ -16,8 +16,6 @@
 package name.wildswift.android.kanprocessor.utils
 
 import com.squareup.kotlinpoet.*
-import name.wildswift.android.kanprocessor.datahelpers.PropertyData
-import java.io.File
 
 /**
  * Created by swift
@@ -51,11 +49,17 @@ fun TypeSpec.Builder.addViewConstructors(additionalCalls: FunSpec.Builder.(Int) 
 
 val contextClass = ClassName("android.content", "Context")
 val viewClass = ClassName("android.view", "View")
+val viewGroupClass = ClassName("android.view", "ViewGroup")
 val parcelableClass = ClassName("android.os", "Parcelable")
 val bundleClass = ClassName("android.os", "Bundle")
 val drawableClass = ClassName("android.graphics.drawable", "Drawable")
 val textWatcherClass = ClassName("android.text", "TextWatcher")
 val editableClass = ClassName("android.text", "Editable")
+val itemsDSClass = ClassName("name.wildswift.android.kannotations.interfaces", "ItemsDataSource")
+val emptyIDSClass = ClassName("name.wildswift.android.kannotations.interfaces", "EmptyItemsDataSource")
+val baseAdapter = ClassName("android.widget", "BaseAdapter")
+val recyclerAdapter = ClassName("androidx.recyclerview.widget", "RecyclerView", "Adapter")
+
 
 fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: PropertySpec, delegatedName: String) = addFunction(
         FunSpec.builder(methodName)
@@ -64,36 +68,6 @@ fun TypeSpec.Builder.delegateCall(methodName: String, delegateProperty: Property
                 .addStatement("%1N.$delegatedName()", delegateProperty)
                 .build()
 )
-
-fun generateDataClass(pack: String, className: String, inputProperties: List<PropertyData>, generationPath: File): Pair<ClassName, TypeSpec?> {
-    val classType = ClassName(pack, className)
-    val classSpec = TypeSpec
-            .classBuilder(classType)
-            .addModifiers(KModifier.DATA)
-            .primaryConstructor(
-                    FunSpec.constructorBuilder()
-                            .let { builder ->
-                                inputProperties.forEach { builder.addParameter(ParameterSpec.builder(it.name, it.type).defaultValue(it.defaultValue).build()) }
-                                builder
-                            }
-                            .build()
-            )
-            .let { builder ->
-                inputProperties.forEach { builder.addProperty(PropertySpec.builder(it.name, it.type).initializer(it.name).build()) }
-                builder
-            }
-            .build()
-            .takeIf { inputProperties.isNotEmpty() }
-
-    if (classSpec != null) {
-        FileSpec
-                .builder(pack, className)
-                .addType(classSpec)
-                .build()
-                .writeTo(generationPath)
-    }
-    return classType to classSpec
-}
 
 fun TypeSpec.Builder.generateViewSave(getIntState: FunSpec) = FunSpec
         .builder("onSaveInstanceState")

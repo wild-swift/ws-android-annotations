@@ -66,5 +66,4 @@ class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState
     internal fun showCustom(t: Int, p: String, a: TestViewDelegate): Int {
         return 0
     }
-
 }

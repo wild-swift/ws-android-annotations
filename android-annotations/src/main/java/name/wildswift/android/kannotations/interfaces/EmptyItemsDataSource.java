@@ -16,12 +16,22 @@
 
 package name.wildswift.android.kannotations.interfaces;
 
-public interface ListObserver {
-    void onItemInserted(int index);
+public final class EmptyItemsDataSource<T> implements ItemsDataSource<T> {
+    @Override
+    public T get(int index) {
+        throw new IndexOutOfBoundsException();
+    }
 
-    void onItemRemoved(int index);
+    @Override
+    public int getSize() {
+        return 0;
+    }
 
-    void onItemChanged(int index);
+    @Override
+    public void addObserver(ItemsObserver observer) {
+    }
 
-    void onItemsReloaded();
+    @Override
+    public void removeObserver(ItemsObserver observer) {
+    }
 }

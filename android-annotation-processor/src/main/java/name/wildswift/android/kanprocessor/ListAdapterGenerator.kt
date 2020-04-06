@@ -13,26 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.android.kannotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package name.wildswift.android.kanprocessor
 
-/**
- * Created by swift
- */
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface ViewWithDelegate {
-    String name() default "";
+object ListAdapterGenerator {
 
-    Class parent();
 
-    String layoutResourceName() default "";
-
-    boolean saveInstanceState() default true;
-
-    boolean generateViewDataObject() default true;
 }

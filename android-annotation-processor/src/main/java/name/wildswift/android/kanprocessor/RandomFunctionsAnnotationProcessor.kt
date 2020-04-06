@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.RandomFunction
 import name.wildswift.android.kannotations.RandomFunctionType
 import name.wildswift.android.kannotations.RandomFunctions
+import name.wildswift.android.kanprocessor.utils.resolveKotlinVisibility
 import name.wildswift.android.kanprocessor.utils.safeGetType
 import java.util.*
 import javax.annotation.processing.RoundEnvironment

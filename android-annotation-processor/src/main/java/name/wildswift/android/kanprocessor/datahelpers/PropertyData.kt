@@ -25,5 +25,6 @@ import com.squareup.kotlinpoet.TypeName
 data class PropertyData(
         val name: String,
         val type: TypeName,
-        val defaultValue: String
+        val defaultValuePattern: String,
+        val defaultValueClass: TypeName? = null
 )

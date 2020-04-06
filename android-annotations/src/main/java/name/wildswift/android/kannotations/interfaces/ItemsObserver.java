@@ -16,10 +16,12 @@
 
 package name.wildswift.android.kannotations.interfaces;
 
-import java.util.List;
+public interface ItemsObserver {
+    void onItemInserted(int index);
 
-public interface ObservableList<T> extends List<T> {
-    void addObserver(ListObserver observer);
+    void onItemRemoved(int index);
 
-    void removeObserver(ListObserver observer);
+    void onItemChanged(int index);
+
+    void onItemsReloaded();
 }
