@@ -22,6 +22,7 @@ import java.io.File
 
 object DataClassGenerator {
     fun generateDataClass(classType: ClassName, inputProperties: List<PropertyData>, generationPath: File): TypeSpec? {
+        if (inputProperties.isEmpty()) return null
         val classSpec = TypeSpec
                 .classBuilder(classType)
                 .addModifiers(KModifier.DATA)
@@ -44,15 +45,12 @@ object DataClassGenerator {
                     builder
                 }
                 .build()
-                .takeIf { inputProperties.isNotEmpty() }
 
-        if (classSpec != null) {
-            FileSpec
-                    .builder(classType.packageName, classType.simpleNames.first())
-                    .addType(classSpec)
-                    .build()
-                    .writeTo(generationPath)
-        }
+        FileSpec
+                .builder(classType.packageName, classType.simpleNames.first())
+                .addType(classSpec)
+                .build()
+                .writeTo(generationPath)
         return classSpec
     }
 

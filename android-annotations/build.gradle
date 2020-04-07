@@ -25,7 +25,8 @@ version = publish_version
 
 dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_7
@@ -60,7 +61,7 @@ publishing {
                 def dependenciesNode = asNode().appendNode('dependencies')
 
                 // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
-                configurations.implementation.allDependencies.each {
+                configurations.api.allDependencies.each {
                     // Ensure dependencies such as fileTree are not included in the pom.
                     if (it.name != 'unspecified') {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
