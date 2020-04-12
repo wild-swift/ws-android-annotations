@@ -76,10 +76,8 @@ Every field in specification for generate views has next parameters
 
 * Name
 * Type specification (see section below)
-* Public flag
-* Listener flag
-* Mutable flag
-* Link with child view _(optional)_ 
+* Read-write mode
+* Link with child view _(optional)_  
 
 And now supported two types of field: primitive and collections 
 
@@ -109,3 +107,21 @@ backgroundDrawable| `Drawable?` | null | |
 
 ### List fields
 To specify list 
+
+### Read/write modes
+Read-write modes differ in the following parameters: 
+* Can be accessed outside view class
+* Can be assigned outside view class
+* Has notify about internal changes
+* Has notify about all changes. 
+
+A detailed description is presented in the table below.
+
+Name|Access outside|Assign outside|Notification type
+----|--------------|--------------|-----------------
+Private|false|false|none
+Property|true|false|none
+ObservableProperty|true|false|int. changes
+Field|true|true|none
+ObservableField|true|true|int. changes
+FullObservableField|true|true|ex. changes
