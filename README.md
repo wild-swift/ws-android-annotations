@@ -45,5 +45,10 @@ kapt {
 _Optional:_ If you use view generation, in many case you will need to use resources names. In this case to avoid mistakes you may use [another my plugin](https://github.com/wild-swift/ws-resource-name-resolver-plugin) that generate classes with constants to all names of resources, that you can use in annotations. For example `IdRNames` or `DrawableRNames`   
 
 ## Activity extensions
+In progress
+
 ## Random function invocation
+For some reason you may need to inline one of different code block with same behavior. For example if you need to complicate reverse engineering of compiled code. You may annotate class with RandomFunction, and annotation processing task generate inline functions that will call random code from provided dictionary, and this code will changes every time you invoke build process    
+
 ## View generating
+In progress
