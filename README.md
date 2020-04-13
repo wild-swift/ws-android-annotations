@@ -119,7 +119,7 @@ Read-write modes differ in the following parameters:
 A detailed description is presented in the table below.
 
 Name|Access outside|Assign outside|Notification type|ViewModel
-----|--------------|--------------|-----------------
+----|--------------|--------------|-----------------|---------
 Private|false|false|none|no
 Property|true|false|none|yes (not change internal state)
 ObservableProperty|true|false|int. changes|yes (not change internal state)
