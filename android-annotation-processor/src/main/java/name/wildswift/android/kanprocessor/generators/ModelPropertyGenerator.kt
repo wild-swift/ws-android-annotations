@@ -26,7 +26,7 @@ import name.wildswift.android.kanprocessor.utils.*
 import kotlin.properties.Delegates
 
 object ModelPropertyGenerator {
-    fun internalModelProperty(data: ViewWithDelegateGenerationData, delegateProperty: PropertySpec, listFieldsGenerationData: List<ListFieldGenerationData>): PropertySpec {
+    fun internalModelProperty(data: ViewWithDelegateGenerationData, delegateProperty: PropertySpec, listFieldsGenerationData: List<ListFieldGenerationData>, childrenUpdateProperty: PropertySpec): PropertySpec {
         return PropertySpec.builder("intModel", data.internalModelType)
                 .mutable()
                 .addModifiers(KModifier.PRIVATE)
@@ -38,6 +38,7 @@ object ModelPropertyGenerator {
                                                     |
                                                     |
                                                 """.trimMargin(), Delegates::class.asTypeName(), data.internalModelType)
+                                .addStatement("%N = true", childrenUpdateProperty)
                                 .apply {
                                     data.basicFields
                                             .filter { it.childName.isNotEmpty() }
@@ -53,6 +54,7 @@ object ModelPropertyGenerator {
                                                 addStatement("··if·(oldValue.${it.name}·!=·newValue.${it.name})·${it.childListView}.setAdapter(${it.name.capitalize()}Adapter(context,·newValue.${it.name}))")
                                             }
                                 }
+                                .addStatement("%N = false", childrenUpdateProperty)
                                 .add("""
                                                     |
                                                     |  %N.onNewInternalState(newValue)

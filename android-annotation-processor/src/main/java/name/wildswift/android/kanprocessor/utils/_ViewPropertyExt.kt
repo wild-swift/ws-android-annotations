@@ -72,12 +72,12 @@ fun ViewProperty.getListenerGroup() = when (this) {
 }
 
 // TODO make more pretty
-fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty1: PropertySpec, bodyCodeProperty2: PropertySpec, bodyCodeProperty3: FunSpec?, codeBlockBuilder: CodeBlock.Builder) {
+fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty1: PropertySpec, bodyCodeProperty2: PropertySpec, bodyCodeProperty3: FunSpec?, bodyCodeProperty4: PropertySpec, codeBlockBuilder: CodeBlock.Builder) {
     when (this) {
         ViewProperty.text -> {
             codeBlockBuilder.add("""
-                |$childName.addTextChangedListener(object : %4T {
-                |    override fun afterTextChanged(text: %5T) {
+                |$childName.addTextChangedListener(object : %5T {
+                |    override fun afterTextChanged(text: %6T) {
                 |    $body
                 |    }
                 |
@@ -90,7 +90,7 @@ fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty
                 |    }
                 |})
                 |
-            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, textWatcherClass, editableClass)
+            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, bodyCodeProperty4, textWatcherClass, editableClass)
         }
         ViewProperty.checked -> {
             codeBlockBuilder.add("""
@@ -98,7 +98,7 @@ fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty
                     |    $body
                     |}
                     |
-                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, bodyCodeProperty4)
         }
         ViewProperty.timePickerHour, ViewProperty.timePickerMinute -> {
             codeBlockBuilder.add("""
@@ -106,7 +106,7 @@ fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty
                     |$body
                     |}
                     |
-                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+                """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, bodyCodeProperty4)
         }
         ViewProperty.radioSelect -> {
             codeBlockBuilder.add("""
@@ -115,7 +115,7 @@ fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty
                 |$body     
                 |}
                 | 
-            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3, bodyCodeProperty4)
         }
         else -> {
 

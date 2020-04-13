@@ -38,10 +38,10 @@ public @interface ViewField {
 
     String childPropertySetter() default "";
 
-    boolean isPublic() default true;
-
     ReadWriteMode rwType() default ReadWriteMode.Field;
 
     // change child properties
     String childName() default "";
+
+    boolean activeChild() default false;
 }

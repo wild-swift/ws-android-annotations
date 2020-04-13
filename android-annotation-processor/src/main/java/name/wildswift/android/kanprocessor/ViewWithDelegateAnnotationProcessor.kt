@@ -100,6 +100,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
     private fun writeExtensionsFile(data: ViewWithDelegateGenerationData, envConstants: ProcessingEnvConstants) {
         val delegateProperty = PropertySpec.builder("delegate", data.delegateType).addModifiers(KModifier.PRIVATE).initializer("%T(this)", data.delegateType).build()
+        val childrenUpdateProperty = PropertySpec.builder("childrenUpdate", BOOLEAN).addModifiers(KModifier.PRIVATE).mutable().initializer("false").build()
 
         val internalProperties = data
                 .basicFields
@@ -175,7 +176,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         val publicModelClass = if (data.rootAnnotation.generateViewDataObject) generateDataClass(data.externalModelType, publicModelProperties, generationPath) else null
         val internalModelClass = generateDataClass(data.internalModelType, internalProperties, generationPath)
-        val internalModelProperty = internalModelClass?.let { internalModelProperty(data, delegateProperty, listFieldsGenerationData) }
+        val internalModelProperty = internalModelClass?.let { internalModelProperty(data, delegateProperty, listFieldsGenerationData, childrenUpdateProperty) }
 
         val listeners = buildListenersSpecs(data.basicFields)
 
@@ -242,6 +243,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     this
                 }
                 .addProperty(delegateProperty)
+                .addProperty(childrenUpdateProperty)
                 .apply {
                     if (internalModelProperty != null) addProperty(internalModelProperty)
                     if (publicModelProperty != null) addProperty(publicModelProperty)
@@ -282,7 +284,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                         .also { codeBlockBuilder ->
                             data.basicFields
                                     .filter { it.childName.isNotEmpty() }
-                                    .filter { it.rwType.notifyIntChanges }
+                                    .filter { it.activeChild }
                                     .groupBy { it.childName }
                                     .forEach { child, value ->
                                         var propertiesList = value
@@ -294,7 +296,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                         .mapNotNull { property -> propertiesList.find { it.property == property } }
                                                         .let { viewField ->
                                                             """
-                                                                |    if (${viewField.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) {
+                                                                |    if ((${viewField.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) && !%4N) {
                                                                 |        val oldModel = %1N
                                                                 |        %1N = %2N.validateStateForOutput(
                                                                 |                %1N.copy(
@@ -307,7 +309,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                                                 |
                                                         """.trimMargin()
                                                         }
-                                                        .also { listenerGroup.first().buildListener(child, it, internalModelProperty!!, delegateProperty, notifyChangedFun, codeBlockBuilder) }
+                                                        .also { listenerGroup.first().buildListener(child, it, internalModelProperty!!, delegateProperty, notifyChangedFun, childrenUpdateProperty, codeBlockBuilder) }
 
                                                 propertiesList = propertiesList.filter { !listenerGroup.contains(it.property) }
                                             } else {
@@ -332,7 +334,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
             data.attrs.forEach {
                 val propertyName = if (it.fieldName.isBlank()) it.reference else it.fieldName
-                if (data.basicFields.find { it.isPublic && it.name == propertyName } == null) {
+                if (data.basicFields.find { it.rwType.public && it.name == propertyName } == null) {
                     viewClassSpec.addProperty(PropertySpec
                             .builder(propertyName, it.type.fieldClass())
                             .mutable()

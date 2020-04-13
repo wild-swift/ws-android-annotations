@@ -39,7 +39,7 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = ReadWriteMode.FullObservableField),
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = ReadWriteMode.FullObservableField),
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundDrawable, name = "labelBGDrawable"),
-        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", isPublic = false),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible"),
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
         ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = ReadWriteMode.FullObservableField),
         ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageDrawable, name = "imageAsDrawable"),
