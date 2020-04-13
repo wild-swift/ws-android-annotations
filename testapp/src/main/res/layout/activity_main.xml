@@ -20,7 +20,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
 
-    <name.wildswift.testapp.TestView
+    <name.wildswift.testapp.TestReadWriteModesView
+        android:id="@+id/testView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:visibleColor="@android:color/holo_green_light" />

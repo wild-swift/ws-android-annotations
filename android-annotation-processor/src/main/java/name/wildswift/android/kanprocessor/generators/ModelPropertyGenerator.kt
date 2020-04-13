@@ -18,8 +18,7 @@ package name.wildswift.android.kanprocessor.generators
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import name.wildswift.android.kannotations.FieldRWType
-import name.wildswift.android.kannotations.ViewProperty
+import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kanprocessor.datahelpers.FieldMethodsGenerationMetadata
 import name.wildswift.android.kanprocessor.datahelpers.ListFieldGenerationData
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
@@ -42,7 +41,6 @@ object ModelPropertyGenerator {
                                 .apply {
                                     data.basicFields
                                             .filter { it.childName.isNotEmpty() }
-                                            .filter { it.rwType != FieldRWType.readOnly }
                                             .forEach {
                                                 addStatement("··if·(oldValue.${it.name}·!=·newValue.${it.name})·${it.childName}.${it.resolveSetter("newValue.${it.name}")}")
                                             }
@@ -65,35 +63,56 @@ object ModelPropertyGenerator {
                 .build()
     }
 
-    fun buildFieldsSpecs(data: ViewWithDelegateGenerationData, internalModelProperty: PropertySpec?, delegateProperty: PropertySpec, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): List<FieldMethodsGenerationMetadata> {
-        val basicFields = data.basicFields
-                .filter { it.publicAccess }
+    fun buildListenersSpecs(basicFields: List<ViewField>): List<Pair<String, PropertySpec>> {
+        return basicFields
+                .filter { it.rwType.notifyIntChanges }
                 .map { field ->
-                    val fieldType = if (field.property != ViewProperty.none) field.property.getType() else field.safeGetType { type }
-                    val onChangedListener =
-                            if (field.rwType != FieldRWType.writeOnly) {
-                                PropertySpec
+                    val fieldType = field.resolveType()
+                    val onChangedListener = PropertySpec
                                         .builder("on${field.name.capitalize()}Changed", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(fieldType)), returnType = Unit::class.asTypeName()).copy(nullable = true))
                                         .mutable()
                                         .initializer("null")
                                         .build()
-                            } else {
-                                null
-                            }
+                    field.name to onChangedListener
+                }
+    }
+
+    fun buildFieldsSpecs(
+            data: ViewWithDelegateGenerationData,
+            listenersMap: Map<String, PropertySpec>,
+            internalModelProperty: PropertySpec,
+            delegateProperty: PropertySpec,
+            notifyChangeFunction: FunSpec?,
+            processingTypeMap: Map<String, ViewWithDelegateGenerationData>
+    ): List<FieldMethodsGenerationMetadata> {
+        val basicFields = data.basicFields
+                .filter { it.rwType.public }
+                .map { field ->
+                    val fieldType = field.resolveType()
+                    val onChangedListener = listenersMap[field.name]
 
                     val fieldProperty = PropertySpec
                             .builder(field.name, fieldType)
-                            .getter(FunSpec.getterBuilder().addStatement("return %N.${field.name}", internalModelProperty!!).build())
+                            .getter(FunSpec.getterBuilder().addStatement("return %N.${field.name}", internalModelProperty).build())
                             .also {
-                                if (field.rwType != FieldRWType.readOnly) {
+                                if (field.rwType.mutablePublic) {
+                                    val setterParameter = ParameterSpec.builder("new${field.name.capitalize()}", fieldType).build()
                                     it.mutable().setter(
                                             FunSpec.setterBuilder()
-                                                    .addParameter(ParameterSpec.builder("value", fieldType).build())
-                                                    .addStatement("if (%1N.${field.name} == value) return", internalModelProperty)
-                                                    .addStatement("%1N = %2N.validateStateForNewInput(%1N.copy(${field.name} = value))", internalModelProperty, delegateProperty)
+                                                    .addParameter(setterParameter)
+                                                    .addStatement("if (%1N.${field.name} == %2N) return", internalModelProperty, setterParameter)
+                                                    .addStatement("val old${field.name.capitalize()} = %1N.copy(${field.name} = %2N)", internalModelProperty, setterParameter)
+                                                    .addStatement("%1N = %2N.validateStateForNewInput(old${field.name.capitalize()})", internalModelProperty, delegateProperty)
                                                     .apply {
-                                                        onChangedListener?.apply {
-                                                            addStatement("%1N?.invoke(value)", this)
+                                                        if (notifyChangeFunction != null) {
+                                                            addStatement("%1N(old${field.name.capitalize()}, %2N)", notifyChangeFunction, internalModelProperty)
+                                                        }
+                                                    }
+                                                    .apply {
+                                                        if (field.rwType.notifyExtChanges) {
+                                                            onChangedListener?.apply {
+                                                                addStatement("%1N?.invoke(%2N)", this, setterParameter)
+                                                            }
                                                         }
                                                     }
                                                     .build()
@@ -104,7 +123,7 @@ object ModelPropertyGenerator {
                     FieldMethodsGenerationMetadata(name = field.name, readWriteProperty = fieldProperty, listenerProperty = onChangedListener)
                 }
 
-        val listFields = data.listFields
+        val listFields = data.collectionFields
                 .filter { it.isPublic }
                 .map { field ->
                     val fieldType = itemsDSClass.parameterizedBy(field.getModelType(processingTypeMap))

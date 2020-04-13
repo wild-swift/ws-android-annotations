@@ -35,13 +35,13 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
         ViewAttribute(reference = AttrRNames.textIn, type = AttributeType.enum_)
 )
 @Fields(
-        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label", rwType = FieldRWType.readWrite),
-        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = FieldRWType.readWrite),
-        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.text, name = "label", rwType = ReadWriteMode.FullObservableField),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundResource, name = "labelBGResource", rwType = ReadWriteMode.FullObservableField),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundColor, name = "labelBGColor", rwType = ReadWriteMode.FullObservableField),
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.backgroundDrawable, name = "labelBGDrawable"),
-        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", publicAccess = false),
+        ViewField(childName = IdRNames.vtLabel, property = ViewProperty.visibility, name = "visible", isPublic = false),
         ViewField(childName = IdRNames.vtLabel, property = ViewProperty.textColor, name = "visibleColor"),
-        ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = FieldRWType.readWrite),
+        ViewField(childName = IdRNames.vtCheck, property = ViewProperty.checked, name = "check", rwType = ReadWriteMode.FullObservableField),
         ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageDrawable, name = "imageAsDrawable"),
         ViewField(childName = IdRNames.vtImage, property = ViewProperty.imageResource, name = "imageAsResource"),
         ViewField(name = "booleanField", type = Boolean::class),

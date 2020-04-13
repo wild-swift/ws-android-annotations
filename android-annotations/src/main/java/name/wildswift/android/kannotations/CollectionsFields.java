@@ -16,32 +16,16 @@
 
 package name.wildswift.android.kannotations;
 
-import android.view.View;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Created by swift
+ */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface ListViewField {
-    String name();
-
-    boolean isPublic() default true;
-
-    String childListView() default "";
-
-    ListImplementation listImplementation() default ListImplementation.RecyclerView;
-
-    Class delegateClass() default Void.class;
-
-    Class elementType() default Void.class;
-
-    Class<? extends View> viewForElementClass() default View.class;
-
-    String modelFieldName() default "viewModel";
-
-    String modelSetterName() default "";
-
+public @interface CollectionsFields {
+    CollectionViewField[] value();
 }

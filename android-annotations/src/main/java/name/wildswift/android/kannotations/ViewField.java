@@ -28,20 +28,20 @@ import java.lang.annotation.Target;
 public @interface ViewField {
     // common properties
     String name();
-    Class type() default Object.class;
-    String defaultValue() default "";
-
-    boolean publicAccess() default true;
-
-    FieldRWType rwType() default FieldRWType.writeOnly;
-
-    // change child properties
-    String childName() default "";
 
     ViewProperty property() default ViewProperty.none;
 
+    Class type() default Object.class;
+    String defaultValue() default "";
+
     String childPropertyName() default "";
+
     String childPropertySetter() default "";
 
+    boolean isPublic() default true;
 
+    ReadWriteMode rwType() default ReadWriteMode.Field;
+
+    // change child properties
+    String childName() default "";
 }

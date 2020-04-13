@@ -17,6 +17,7 @@ package name.wildswift.testapp
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import name.wildswift.android.kannotations.ActivityField
 import name.wildswift.android.kannotations.RandomFunction
 import name.wildswift.android.kannotations.RandomFunctionParameter
@@ -47,5 +48,59 @@ internal class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         this.random1(123)
+
+        val testView = findViewById<TestReadWriteModesView>(R.id.testView)
+        // check view model behavior
+        testView.viewModel = TestReadWriteModesViewModel(
+                count = 10, // must change value
+                roText = "Test", // must be ignored
+                check = true, // must be ignored
+                radioSelect = R.id.vtrwmRadioCheck3, // must change value
+                rwText = "Test 2" // must change value
+        )
+
+        check(testView.viewModel == TestReadWriteModesViewModel(
+                count = 10,
+                roText = "",
+                check = false,
+                radioSelect = R.id.vtrwmRadioCheck3,
+                rwText = "Test 2"
+        ))
+
+        testView.count = 1
+        testView.radioSelect = R.id.vtrwmRadioCheck1
+        testView.rwText = ""
+
+        // must be read only
+//        testView.roText = ""
+//        testView.check = true
+
+        // must be expected
+//        testView.title = ""
+
+        testView.onCheckChanged = {
+            Log.w("TestNotify", "onCheckChanged = $it")
+        }
+        testView.onRadioSelectChanged = {
+            Log.w("TestNotify", "onRadioSelectChanged = $it")
+        }
+        testView.onRwTextChanged = {
+            Log.w("TestNotify", "onRwTextChanged = $it")
+        }
+
+        // this fields must not be generated
+//        testView.onCountChanged
+//        testView.onTitleChanged
+//        testView.onRoTextChanged
+
+        testView.reset = {
+            testView.viewModel = TestReadWriteModesViewModel(
+                    count = testView.viewModel.count + 1, // must change value
+                    roText = "Test", // must be ignored
+                    check = true, // must be ignored
+                    radioSelect = R.id.vtrwmRadioCheck3, // must change value
+                    rwText = "Test 2" // must change value
+            )
+        }
     }
 }

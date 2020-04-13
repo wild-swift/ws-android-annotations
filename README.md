@@ -113,15 +113,16 @@ Read-write modes differ in the following parameters:
 * Can be accessed outside view class
 * Can be assigned outside view class
 * Has notify about internal changes
-* Has notify about all changes. 
+* Has notify about all changes
+* Includes in ViewModel class
 
 A detailed description is presented in the table below.
 
-Name|Access outside|Assign outside|Notification type
+Name|Access outside|Assign outside|Notification type|ViewModel
 ----|--------------|--------------|-----------------
-Private|false|false|none
-Property|true|false|none
-ObservableProperty|true|false|int. changes
-Field|true|true|none
-ObservableField|true|true|int. changes
-FullObservableField|true|true|ex. changes
+Private|false|false|none|no
+Property|true|false|none|yes (not change internal state)
+ObservableProperty|true|false|int. changes|yes (not change internal state)
+Field|true|true|none|yes
+ObservableField|true|true|int. changes|yes
+FullObservableField|true|true|ex. changes|yes

@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package name.wildswift.android.kannotations;
 
 /**
  * Created by swift
  */
-public enum ViewProperty {
-    none, text, visibility, textColor, checked, timePickerHour, timePickerMinute,
-    imageResource, imageDrawable, backgroundResource, backgroundColor, backgroundDrawable,
-    radioSelect
+public enum ReadWriteMode {
+    Private,
+    Property,
+    ObservableProperty,
+    Field,
+    ObservableField,
+    FullObservableField
 }

@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package name.wildswift.android.kannotations;
+package name.wildswift.android.kanprocessor.utils
+
+import name.wildswift.android.kannotations.ReadWriteMode
 
 /**
  * Created by swift
  */
-public enum FieldRWType {
-    readOnly, writeOnly, readWrite
-}
+
+val ReadWriteMode.public: Boolean get() = this != ReadWriteMode.Private
+
+val ReadWriteMode.mutablePublic: Boolean get() = this == ReadWriteMode.Field || this == ReadWriteMode.ObservableField || this == ReadWriteMode.FullObservableField
+
+val ReadWriteMode.notifyIntChanges: Boolean get() = this == ReadWriteMode.ObservableProperty || this == ReadWriteMode.ObservableField || this == ReadWriteMode.FullObservableField
+
+val ReadWriteMode.notifyExtChanges: Boolean get() = this == ReadWriteMode.FullObservableField

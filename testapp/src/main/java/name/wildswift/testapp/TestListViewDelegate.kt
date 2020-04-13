@@ -19,19 +19,18 @@ package name.wildswift.testapp
 import android.widget.LinearLayout
 import android.widget.LinearLayout.VERTICAL
 import android.widget.TextView
+import name.wildswift.android.kannotations.CollectionViewField
+import name.wildswift.android.kannotations.CollectionsFields
 import name.wildswift.android.kannotations.ListImplementation
-import name.wildswift.android.kannotations.ListViewField
-import name.wildswift.android.kannotations.ListingsFields
 import name.wildswift.android.kannotations.ViewWithDelegate
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 
 @ViewWithDelegate(
         parent = LinearLayout::class
 )
-@ListingsFields(
-        ListViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, delegateClass = TestViewDelegate::class),
-        ListViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
-//        ListViewField(name = "subList3", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text", modelSetterName = "setText")
+@CollectionsFields(
+        CollectionViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, delegateClass = TestViewDelegate::class),
+        CollectionViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
 )
 class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, TestListViewIntState>(view) {
     override fun setupView() {

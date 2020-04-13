@@ -116,8 +116,4 @@ class RandomFunctionsAnnotationProcessor : KotlinAbstractProcessor() {
 
         file.writeTo(generationPath)
     }
-
-    companion object {
-        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
-    }
 }

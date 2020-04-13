@@ -18,26 +18,26 @@ package name.wildswift.android.kanprocessor
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import name.wildswift.android.kannotations.ListViewField
+import name.wildswift.android.kannotations.CollectionViewField
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
 import name.wildswift.android.kanprocessor.utils.*
 import java.lang.ref.WeakReference
 
 object ListAdapterGenerator {
 
-    fun buildOldAdapterClass(listField: ListViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
+    fun buildOldAdapterClass(collectionField: CollectionViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
         return TypeSpec
-                .classBuilder(listField.name.capitalize() + "Adapter")
+                .classBuilder(collectionField.name.capitalize() + "Adapter")
                 .addModifiers(KModifier.PRIVATE)
                 .primaryConstructor(
                         FunSpec.constructorBuilder()
                                 .addParameter(ParameterSpec.builder("context", contextClass).build())
-                                .addParameter(ParameterSpec.builder("values", itemsDSClass.parameterizedBy(listField.getModelType(processingTypeMap))).build())
+                                .addParameter(ParameterSpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap))).build())
                                 .build()
                 )
                 .addProperty(PropertySpec.builder("context", contextClass, KModifier.PRIVATE).initializer("context").build())
-                .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(listField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
-                .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(listField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
+                .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
+                .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(collectionField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
                 .superclass(baseAdapterClass)
                 .addSuperinterface(itemsObserverClass)
                 .addFunction(
@@ -47,8 +47,8 @@ object ListAdapterGenerator {
                                 .addParameter(ParameterSpec.builder("reuse", viewClass.copy(nullable = true)).build())
                                 .addParameter(ParameterSpec.builder("parent", viewGroupClass).build())
                                 .returns(viewClass)
-                                .addStatement("val view = reuse as? %1T ?:·%1T(context).apply·{·createdViews·=·createdViews.filter·{·it.get()·!=·null·}·+·%2T(this)·}", listField.getAdapterViewType(processingTypeMap), WeakReference::class.asTypeName())
-                                .addStatement("view.${listField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
+                                .addStatement("val view = reuse as? %1T ?:·%1T(context).apply·{·createdViews·=·createdViews.filter·{·it.get()·!=·null·}·+·%2T(this)·}", collectionField.getAdapterViewType(processingTypeMap), WeakReference::class.asTypeName())
+                                .addStatement("view.${collectionField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
                                 .addStatement("view.tag = index")
                                 .addStatement("return view")
                                 .build()
@@ -104,7 +104,7 @@ object ListAdapterGenerator {
                                 .addModifiers(KModifier.OVERRIDE)
                                 .addParameter(ParameterSpec.builder("index", INT).build())
                                 .addStatement("createdViews.filter·{·it.get()?.tag·==·index·}.forEach·{")
-                                .addStatement("⇥it.get()?.${listField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
+                                .addStatement("⇥it.get()?.${collectionField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
                                 .addStatement("⇤}")
                                 .build()
                 )
@@ -124,28 +124,28 @@ object ListAdapterGenerator {
                 .build()
     }
 
-    fun buildRecyclerAdapterClass(listField: ListViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
+    fun buildRecyclerAdapterClass(collectionField: CollectionViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
         return TypeSpec
-                .classBuilder(listField.name.capitalize() + "Adapter")
+                .classBuilder(collectionField.name.capitalize() + "Adapter")
                 .addModifiers(KModifier.PRIVATE)
                 .superclass(recyclerAdapterClass.parameterizedBy(recyclerHolderClass))
                 .addSuperinterface(itemsObserverClass)
                 .primaryConstructor(
                         FunSpec.constructorBuilder()
                                 .addParameter(ParameterSpec.builder("context", contextClass).build())
-                                .addParameter(ParameterSpec.builder("values", itemsDSClass.parameterizedBy(listField.getModelType(processingTypeMap))).build())
+                                .addParameter(ParameterSpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap))).build())
                                 .build()
                 )
                 .addProperty(PropertySpec.builder("context", contextClass, KModifier.PRIVATE).initializer("context").build())
-                .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(listField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
-                .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(listField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
+                .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
+                .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(collectionField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
                 .addFunction(
                         FunSpec.builder("onCreateViewHolder")
                                 .addModifiers(KModifier.OVERRIDE)
                                 .addParameter(ParameterSpec.builder("parent", viewGroupClass).build())
                                 .addParameter(ParameterSpec.builder("viewType", INT).build())
                                 .returns(recyclerHolderClass)
-                                .addStatement("return object : %T(%T(context)) {}", recyclerHolderClass, listField.getAdapterViewType(processingTypeMap))
+                                .addStatement("return object : %T(%T(context)) {}", recyclerHolderClass, collectionField.getAdapterViewType(processingTypeMap))
                                 .build()
                 )
                 .addFunction(
@@ -153,9 +153,9 @@ object ListAdapterGenerator {
                                 .addModifiers(KModifier.OVERRIDE)
                                 .addParameter(ParameterSpec.builder("holder", recyclerHolderClass).build())
                                 .addParameter(ParameterSpec.builder("position", INT).build())
-                                .beginControlFlow("(holder.itemView as %T).apply", listField.getAdapterViewType(processingTypeMap))
+                                .beginControlFlow("(holder.itemView as %T).apply", collectionField.getAdapterViewType(processingTypeMap))
                                 .addStatement("tag = position")
-                                .addStatement(listField.buildSetViewModelStatement(processingTypeMap, "values[position]"))
+                                .addStatement(collectionField.buildSetViewModelStatement(processingTypeMap, "values[position]"))
                                 .endControlFlow()
                                 .build()
                 )
@@ -203,7 +203,7 @@ object ListAdapterGenerator {
                                 .addModifiers(KModifier.OVERRIDE)
                                 .addParameter(ParameterSpec.builder("index", INT).build())
                                 .addStatement("createdViews.filter·{·it.get()?.tag·==·index·}.forEach·{")
-                                .addStatement("⇥it.get()?.${listField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
+                                .addStatement("⇥it.get()?.${collectionField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
                                 .addStatement("⇤}")
                                 .build()
                 )

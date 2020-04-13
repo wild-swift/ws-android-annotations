@@ -38,9 +38,8 @@ fun String.toScreamingCase() = this
 
 fun String.toViewResourceName() = this
         .let {
-            val index = it.indexOf("View")
-            if (index >= 0) {
-                "View${it.substring(0, index)}${it.substring(index + 4)}"
+            if (it.endsWith("View", true)) {
+                "View${it.substring(0, it.length - "View".length)}"
             } else {
                 "View$it"
             }

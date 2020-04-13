@@ -23,11 +23,13 @@ import name.wildswift.android.kannotations.ViewProperty
 /**
  * Created by swift
  */
+fun ViewField.resolveType() = if (property != ViewProperty.none) property.getType() else safeGetType { type }
+
 fun ViewField.resolveSetter(field: String) =
         if (property != ViewProperty.none) {
             when (property) {
                 ViewProperty.none -> ""
-                ViewProperty.text -> "setText($field)"
+                ViewProperty.text -> "apply·{·if·(text.toString()·!=·$field)·setText($field)·}"
                 ViewProperty.visibility -> "visibility = $field"
                 ViewProperty.textColor -> "setTextColor($field)"
                 ViewProperty.checked -> "isChecked = $field"
@@ -38,6 +40,7 @@ fun ViewField.resolveSetter(field: String) =
                 ViewProperty.backgroundResource -> "setBackgroundResource($field)"
                 ViewProperty.backgroundColor -> "setBackgroundColor($field)"
                 ViewProperty.backgroundDrawable -> "setBackground($field)"
+                ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
             }
         } else {
             if (childPropertyName.isNotEmpty()) {

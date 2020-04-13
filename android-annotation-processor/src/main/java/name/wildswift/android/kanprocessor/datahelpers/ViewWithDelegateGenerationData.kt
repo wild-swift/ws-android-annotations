@@ -31,7 +31,7 @@ data class ViewWithDelegateGenerationData(
         val attrs: List<ViewAttribute>,
         val events: List<ViewEvent>,
         val basicFields: List<ViewField>,
-        val listFields: List<ListViewField>,
+        val collectionFields: List<CollectionViewField>,
         val delegatedMethods: List<ExecutableElement>,
         val visibilityModifier: KModifier,
         val delegateType: ClassName,
@@ -48,7 +48,7 @@ data class ViewWithDelegateGenerationData(
             val attrs = typeElement.getAnnotationsByType(Attributes::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(ViewAttribute::class.java)
             val events = typeElement.getAnnotationsByType(Events::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(ViewEvent::class.java)
             val fields = typeElement.getAnnotationsByType(Fields::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(ViewField::class.java)
-            val listFields = typeElement.getAnnotationsByType(ListingsFields::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(ListViewField::class.java)
+            val listFields = typeElement.getAnnotationsByType(CollectionsFields::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(CollectionViewField::class.java)
             val visibilityModifier = resolveKotlinVisibility(typeElement)
             val delegatedMethods = typeElement.enclosedElements.filter { it.getAnnotation(Delegated::class.java) != null }.filterIsInstance<ExecutableElement>()
 
@@ -73,7 +73,7 @@ data class ViewWithDelegateGenerationData(
                     attrs = attrs,
                     events = events,
                     basicFields = fields,
-                    listFields = listFields,
+                    collectionFields = listFields,
                     delegatedMethods = delegatedMethods,
                     visibilityModifier = visibilityModifier,
                     delegateType = delegateType,

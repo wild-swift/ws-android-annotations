@@ -16,10 +16,7 @@
 
 package name.wildswift.android.kanprocessor.utils
 
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ViewProperty
 
 /**
@@ -38,6 +35,7 @@ fun ViewProperty.getType() = when (this) {
     ViewProperty.backgroundResource -> Int::class.asTypeName()
     ViewProperty.backgroundColor -> Int::class.asTypeName()
     ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
+    ViewProperty.radioSelect -> INT.copy(nullable = true)
 }
 
 fun ViewProperty.getDefaultValue() = when (this) {
@@ -54,6 +52,7 @@ fun ViewProperty.getDefaultValue() = when (this) {
     ViewProperty.backgroundResource -> "0"
     ViewProperty.backgroundColor -> "0"
     ViewProperty.backgroundDrawable -> "null"
+    ViewProperty.radioSelect -> "null"
 }
 
 fun ViewProperty.getListenerGroup() = when (this) {
@@ -62,6 +61,7 @@ fun ViewProperty.getListenerGroup() = when (this) {
     ViewProperty.checked -> arrayOf(ViewProperty.checked)
     ViewProperty.timePickerHour -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
     ViewProperty.timePickerMinute -> arrayOf(ViewProperty.timePickerHour, ViewProperty.timePickerMinute)
+    ViewProperty.radioSelect -> arrayOf(ViewProperty.radioSelect)
     ViewProperty.visibility -> arrayOf()
     ViewProperty.textColor -> arrayOf()
     ViewProperty.imageResource -> arrayOf()
@@ -108,6 +108,15 @@ fun ViewProperty.buildListener(childName: String, body: String, bodyCodeProperty
                     |
                 """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
         }
+        ViewProperty.radioSelect -> {
+            codeBlockBuilder.add("""
+                |$childName.setOnCheckedChangeListener { _, checkedIdRaw ->
+                |     val checkedId = checkedIdRaw.takeIf { it != -1 }
+                |$body     
+                |}
+                | 
+            """.trimMargin(), bodyCodeProperty1, bodyCodeProperty2, bodyCodeProperty3)
+        }
         else -> {
 
         }
@@ -119,5 +128,6 @@ fun ViewProperty.getListenerPropertyName() = when (this) {
     ViewProperty.checked -> "isChecked"
     ViewProperty.timePickerHour -> "hour"
     ViewProperty.timePickerMinute -> "minute"
+    ViewProperty.radioSelect -> "checkedId"
     else -> ""
 }
