@@ -105,10 +105,12 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val internalProperties = data
                 .basicFields
                 .map {
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { this.type },
-                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
+                            it.resolveType(processingTypeMap),
+                            defaultValuePattern,
+                            defaultValueClass
                     )
                 }
                 .plus(data.collectionFields.map {
@@ -125,10 +127,12 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .basicFields
                 .filter { it.rwType.public }
                 .map {
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { this.type },
-                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
+                            it.resolveType(processingTypeMap),
+                            defaultValuePattern,
+                            defaultValueClass
                     )
                 }
                 .plus(data.collectionFields.filter { it.isPublic }.map {
@@ -144,10 +148,12 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .basicFields
                 .filter { it.rwType.mutablePublic }
                 .map {
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
                     PropertyData(
                             it.name,
-                            if (it.property != ViewProperty.none) it.property.getType() else it.safeGetType { this.type },
-                            if (it.property != ViewProperty.none) it.property.getDefaultValue() else it.resolveDefaultValue()
+                            it.resolveType(processingTypeMap),
+                            defaultValuePattern,
+                            defaultValueClass
                     )
                 }
                 .plus(data.collectionFields.filter { it.isPublic }.map {
@@ -178,7 +184,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val internalModelClass = generateDataClass(data.internalModelType, internalProperties, generationPath)
         val internalModelProperty = internalModelClass?.let { internalModelProperty(data, delegateProperty, listFieldsGenerationData, childrenUpdateProperty) }
 
-        val listeners = buildListenersSpecs(data.basicFields)
+        val listeners = buildListenersSpecs(data.basicFields, processingTypeMap)
 
         val onPublicModelChangedListener =
                 if (publicModelClass != null) {
@@ -286,34 +292,60 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                                     .filter { it.childName.isNotEmpty() }
                                     .filter { it.activeChild }
                                     .groupBy { it.childName }
-                                    .forEach { child, value ->
+                                    .forEach { (child, value) ->
                                         var propertiesList = value
                                         while (propertiesList.isNotEmpty()) {
                                             val viewField = propertiesList[0]
-                                            val listenerGroup = viewField.property.getListenerGroup()
-                                            if (listenerGroup.isNotEmpty()) {
-                                                listenerGroup
-                                                        .mapNotNull { property -> propertiesList.find { it.property == property } }
-                                                        .let { viewField ->
-                                                            """
-                                                                |    if ((${viewField.joinToString(separator = " || ") { "%1N.${it.name} != ${it.property.getListenerPropertyName()}" }}) && !%4N) {
-                                                                |        val oldModel = %1N
-                                                                |        %1N = %2N.validateStateForOutput(
-                                                                |                %1N.copy(
-                                                                |${viewField.joinToString(separator = ",\n") { "                    ${it.name} = ${it.property.getListenerPropertyName()}" }}
-                                                                |                )
-                                                                |        )
-                                                                |        %2N.onNewInternalState(%1N)
-                                                                |        %3N(oldModel, %1N)
-                                                                |    }
-                                                                |
-                                                        """.trimMargin()
-                                                        }
-                                                        .also { listenerGroup.first().buildListener(child, it, internalModelProperty!!, delegateProperty, notifyChangedFun, childrenUpdateProperty, codeBlockBuilder) }
+                                            when {
+                                                viewField.byProperty != ViewProperty.none -> {
+                                                    val listenerGroup = viewField.byProperty.getListenerGroup()
+                                                    if (listenerGroup.isEmpty()) throw throw IllegalStateException("ViewProperty.${viewField.byProperty} not supports activeChild flag")
+                                                    listenerGroup.mapNotNull { property -> propertiesList.find { it.byProperty == property } }
+                                                            .let { viewFields ->
+                                                                """
+                                                                    |    if ((${viewFields.joinToString(separator = " || ") { "%1N.${it.name} != ${it.byProperty.getListenerPropertyName()}" }}) && !%4N) {
+                                                                    |        val oldModel = %1N
+                                                                    |        %1N = %2N.validateStateForOutput(
+                                                                    |                %1N.copy(
+                                                                    |${viewFields.joinToString(separator = ",\n") { "                    ${it.name} = ${it.byProperty.getListenerPropertyName()}" }}
+                                                                    |                )
+                                                                    |        )
+                                                                    |        %2N.onNewInternalState(%1N)
+                                                                    |        %3N(oldModel, %1N)
+                                                                    |    }
+                                                                    |
+                                                                """.trimMargin()
+                                                            }
+                                                            .also { listenerGroup.first().buildListener(child, it, internalModelProperty!!, delegateProperty, notifyChangedFun, childrenUpdateProperty, codeBlockBuilder) }
 
-                                                propertiesList = propertiesList.filter { !listenerGroup.contains(it.property) }
-                                            } else {
-                                                propertiesList = propertiesList.drop(1)
+                                                    propertiesList = propertiesList.filter { !listenerGroup.contains(it.byProperty) }
+                                                }
+                                                viewField.checkIsVoid { byDelegate } -> {
+                                                    codeBlockBuilder.add(""""
+                                                            |$child.onViewModelChanged = { newValue ->
+                                                            |    if (%1N.${viewField.name} != newValue && !%4N) {
+                                                            |        val oldModel = %1N
+                                                            |        %1N = %2N.validateStateForOutput(%1N.copy(${viewField.name} = newValue))
+                                                            |        %2N.onNewInternalState(%1N)
+                                                            |        %3N(oldModel, %1N)
+                                                            |    }
+                                                            |}
+                                                        """.trimMargin(), internalModelProperty!!, delegateProperty, notifyChangedFun, childrenUpdateProperty)
+                                                    propertiesList = propertiesList.drop(1)
+                                                }
+                                                else -> {
+                                                    codeBlockBuilder.add(""""
+                                                            |$child.${viewField.childPropertyListener} = { ${viewField.childPropertyListenerParams} ->
+                                                            |    if (%1N.${viewField.name} != newValue && !%4N) {
+                                                            |        val oldModel = %1N
+                                                            |        %1N = %2N.validateStateForOutput(%1N.copy(${viewField.name} = newValue))
+                                                            |        %2N.onNewInternalState(%1N)
+                                                            |        %3N(oldModel, %1N)
+                                                            |    }
+                                                            |}
+                                                        """.trimMargin(), internalModelProperty!!, delegateProperty, notifyChangedFun, childrenUpdateProperty)
+                                                    propertiesList = propertiesList.drop(1)
+                                                }
                                             }
                                         }
                                     }

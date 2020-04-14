@@ -16,27 +16,10 @@
 
 package name.wildswift.android.kanprocessor.utils
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.PropertySpec
 import name.wildswift.android.kannotations.ViewProperty
-
-/**
- * Created by swift
- */
-fun ViewProperty.getType() = when (this) {
-    ViewProperty.none -> Any::class.asTypeName()
-    ViewProperty.text -> String::class.asTypeName()
-    ViewProperty.visibility -> Int::class.asTypeName()
-    ViewProperty.textColor -> Int::class.asTypeName()
-    ViewProperty.checked -> Boolean::class.asTypeName()
-    ViewProperty.timePickerHour -> Int::class.asTypeName()
-    ViewProperty.timePickerMinute -> Int::class.asTypeName()
-    ViewProperty.imageResource -> Int::class.asTypeName()
-    ViewProperty.imageDrawable -> drawableClass.copy(nullable = true)
-    ViewProperty.backgroundResource -> Int::class.asTypeName()
-    ViewProperty.backgroundColor -> Int::class.asTypeName()
-    ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
-    ViewProperty.radioSelect -> INT.copy(nullable = true)
-}
 
 fun ViewProperty.getDefaultValue() = when (this) {
     ViewProperty.none -> ""

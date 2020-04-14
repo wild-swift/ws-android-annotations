@@ -17,60 +17,78 @@
 package name.wildswift.android.kanprocessor.utils
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asTypeName
 import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
+import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
 
 /**
  * Created by swift
  */
-fun ViewField.resolveType() = if (property != ViewProperty.none) property.getType() else safeGetType { type }
-
-fun ViewField.resolveSetter(field: String) =
-        if (property != ViewProperty.none) {
-            when (property) {
-                ViewProperty.none -> ""
-                ViewProperty.text -> "apply·{·if·(text.toString()·!=·$field)·setText($field)·}"
-                ViewProperty.visibility -> "visibility = $field"
-                ViewProperty.textColor -> "setTextColor($field)"
-                ViewProperty.checked -> "isChecked = $field"
-                ViewProperty.timePickerHour -> "hour = $field"
-                ViewProperty.timePickerMinute -> "minute = $field"
-                ViewProperty.imageResource -> "setImageResource($field)"
-                ViewProperty.imageDrawable -> "setImageDrawable($field)"
-                ViewProperty.backgroundResource -> "setBackgroundResource($field)"
-                ViewProperty.backgroundColor -> "setBackgroundColor($field)"
-                ViewProperty.backgroundDrawable -> "setBackground($field)"
-                ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
-            }
-        } else {
-            if (childPropertyName.isNotEmpty()) {
-                "$childPropertyName = $field"
-            } else {
-                "$childPropertySetter($field)"
-            }
-        }
-
 fun ViewField.validateCorrectSetup(): Boolean {
-    if (property == ViewProperty.none && safeGetType { type }.let { it is ClassName && it.canonicalName == "java.lang.Object" }) return false
-    if (property == ViewProperty.none && resolveDefaultValue().isEmpty()) return false
-    if (property == ViewProperty.none && childName.isNotEmpty() && childPropertyName.isEmpty() && childPropertySetter.isEmpty()) return false
+    if (byProperty == ViewProperty.none && checkIsVoid { type } && checkIsVoid { byDelegate }) return false
+    if (checkIsVoid { byDelegate } && (resolveDefaultValue(mapOf()).first).isEmpty()) return false
+    if (byProperty == ViewProperty.none && checkIsVoid { byDelegate } && childName.isNotEmpty() && childPropertyName.isEmpty() && childPropertySetter.isEmpty()) return false
 
     return true
 }
 
-fun ViewField.resolveDefaultValue(): String {
-    if (defaultValue.isNotBlank()) return defaultValue
+fun ViewField.resolveType(typeMapping: Map<String, ViewWithDelegateGenerationData>) =
+        when {
+            byProperty == ViewProperty.text -> String::class.asTypeName()
+            byProperty == ViewProperty.visibility -> Int::class.asTypeName()
+            byProperty == ViewProperty.textColor -> Int::class.asTypeName()
+            byProperty == ViewProperty.checked -> Boolean::class.asTypeName()
+            byProperty == ViewProperty.timePickerHour -> Int::class.asTypeName()
+            byProperty == ViewProperty.timePickerMinute -> Int::class.asTypeName()
+            byProperty == ViewProperty.imageResource -> Int::class.asTypeName()
+            byProperty == ViewProperty.imageDrawable -> drawableClass.copy(nullable = true)
+            byProperty == ViewProperty.backgroundResource -> Int::class.asTypeName()
+            byProperty == ViewProperty.backgroundColor -> Int::class.asTypeName()
+            byProperty == ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
+            byProperty == ViewProperty.radioSelect -> INT.copy(nullable = true)
+            !checkIsVoid { byDelegate } -> typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
+                    ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
+            else -> safeGetType { type }
+        }
+
+fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGenerationData>): Pair<String, TypeName?> {
+    if (byProperty != ViewProperty.none) return byProperty.getDefaultValue() to null
+    if (!checkIsVoid { byDelegate }) return "%T()" to (typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
+            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}"))
+    if (defaultValue.isNotBlank()) return defaultValue to null
     val type = safeGetType { type }
-    if (type !is ClassName) return defaultValue
+    if (type !is ClassName) return defaultValue to null
     return when (type.canonicalName) {
-        Boolean::class.qualifiedName -> "false"
-        Float::class.qualifiedName -> "0.0f"
-        Double::class.qualifiedName -> "0.0"
-        Int::class.qualifiedName -> "0"
-        Long::class.qualifiedName -> "0L"
-        Short::class.qualifiedName -> "0"
-        Byte::class.qualifiedName -> "0"
-        String::class.qualifiedName -> "\"\""
-        else -> defaultValue
+        Boolean::class.qualifiedName -> "false" to null
+        Float::class.qualifiedName -> "0.0f" to null
+        Double::class.qualifiedName -> "0.0" to null
+        Int::class.qualifiedName -> "0" to null
+        Long::class.qualifiedName -> "0L" to null
+        Short::class.qualifiedName -> "0" to null
+        Byte::class.qualifiedName -> "0" to null
+        String::class.qualifiedName -> "\"\"" to null
+        else -> defaultValue to null
     }
 }
+
+fun ViewField.resolveSetter(field: String) =
+        when {
+            byProperty == ViewProperty.text -> "apply·{·if·(text.toString()·!=·$field)·setText($field)·}"
+            byProperty == ViewProperty.visibility -> "visibility = $field"
+            byProperty == ViewProperty.textColor -> "setTextColor($field)"
+            byProperty == ViewProperty.checked -> "isChecked = $field"
+            byProperty == ViewProperty.timePickerHour -> "hour = $field"
+            byProperty == ViewProperty.timePickerMinute -> "minute = $field"
+            byProperty == ViewProperty.imageResource -> "setImageResource($field)"
+            byProperty == ViewProperty.imageDrawable -> "setImageDrawable($field)"
+            byProperty == ViewProperty.backgroundResource -> "setBackgroundResource($field)"
+            byProperty == ViewProperty.backgroundColor -> "setBackgroundColor($field)"
+            byProperty == ViewProperty.backgroundDrawable -> "setBackground($field)"
+            byProperty == ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
+            checkIsVoid { byDelegate } -> "viewModel = $field"
+            childPropertyName.isNotEmpty() -> "$childPropertyName = $field"
+            else -> "$childPropertySetter($field)"
+        }

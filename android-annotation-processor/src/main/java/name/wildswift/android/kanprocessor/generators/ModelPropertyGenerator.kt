@@ -65,11 +65,11 @@ object ModelPropertyGenerator {
                 .build()
     }
 
-    fun buildListenersSpecs(basicFields: List<ViewField>): List<Pair<String, PropertySpec>> {
+    fun buildListenersSpecs(basicFields: List<ViewField>, typeMapping: Map<String, ViewWithDelegateGenerationData>): List<Pair<String, PropertySpec>> {
         return basicFields
                 .filter { it.rwType.notifyIntChanges }
                 .map { field ->
-                    val fieldType = field.resolveType()
+                    val fieldType = field.resolveType(typeMapping)
                     val onChangedListener = PropertySpec
                                         .builder("on${field.name.capitalize()}Changed", LambdaTypeName.get(parameters = listOf(ParameterSpec.unnamed(fieldType)), returnType = Unit::class.asTypeName()).copy(nullable = true))
                                         .mutable()
@@ -90,7 +90,7 @@ object ModelPropertyGenerator {
         val basicFields = data.basicFields
                 .filter { it.rwType.public }
                 .map { field ->
-                    val fieldType = field.resolveType()
+                    val fieldType = field.resolveType(processingTypeMap)
                     val onChangedListener = listenersMap[field.name]
 
                     val fieldProperty = PropertySpec

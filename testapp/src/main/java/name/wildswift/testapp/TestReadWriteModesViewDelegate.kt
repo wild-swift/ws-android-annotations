@@ -27,11 +27,11 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
 )
 @Fields(
         ViewField(name = "count", rwType = ReadWriteMode.Field, type = Int::class),
-        ViewField(name = "title", rwType = ReadWriteMode.Private, childName = IdRNames.vtrwmTitle, property = ViewProperty.text),
-        ViewField(name = "roText", rwType = ReadWriteMode.Property, childName = IdRNames.vtrwmROEditor, property = ViewProperty.text, activeChild = true),
-        ViewField(name = "check", rwType = ReadWriteMode.ObservableProperty, childName = IdRNames.vtrwmCheckbox, property = ViewProperty.checked, activeChild = true),
-        ViewField(name = "radioSelect", rwType = ReadWriteMode.ObservableField, childName = IdRNames.vtrwmSelector, property = ViewProperty.radioSelect, activeChild = true),
-        ViewField(name = "rwText", rwType = ReadWriteMode.FullObservableField, childName = IdRNames.vtrwmRWEditor, property = ViewProperty.text, activeChild = true)
+        ViewField(name = "title", rwType = ReadWriteMode.Private, childName = IdRNames.vtrwmTitle, byProperty = ViewProperty.text),
+        ViewField(name = "roText", rwType = ReadWriteMode.Property, childName = IdRNames.vtrwmROEditor, byProperty = ViewProperty.text, activeChild = true),
+        ViewField(name = "check", rwType = ReadWriteMode.ObservableProperty, childName = IdRNames.vtrwmCheckbox, byProperty = ViewProperty.checked, activeChild = true),
+        ViewField(name = "radioSelect", rwType = ReadWriteMode.ObservableField, childName = IdRNames.vtrwmSelector, byProperty = ViewProperty.radioSelect, activeChild = true),
+        ViewField(name = "rwText", rwType = ReadWriteMode.FullObservableField, childName = IdRNames.vtrwmRWEditor, byProperty = ViewProperty.text, activeChild = true)
 )
 @ViewEvent(name = "reset", childName = IdRNames.vtrwmButton, listener = ViewListener.onClick)
 class TestReadWriteModesViewDelegate(view: TestReadWriteModesView) : ViewDelegate<TestReadWriteModesView, TestReadWriteModesViewIntState>(view) {

@@ -6,7 +6,6 @@
 Add following lines to your build script (_build.gradle_)
 ```groovy
 buildscript {
-    ext.kotlin_version = '1.3.50'
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.71"
     }
@@ -82,7 +81,11 @@ Every field in specification for generate views has next parameters
 And now supported two types of field: primitive and collections 
 
 ### Field typing
-Field type include next parameters: type, default value, specification for set property in child view, specification for listen property changes in child 
+Field type include answer for the next questions: 
+* What class or type we use for field declaration?
+* How we must init field at object creation 
+* How we will set value of field to linked child view
+* How we will listen changes in child?
 
 There are 3 way to specify field type
 * Use standard pattern (text property for text view)
@@ -91,22 +94,31 @@ There are 3 way to specify field type
 
 #### Standard patterns
 
+Table below shows how standard patterns answer to questions above  
+
 Name|Type|Default value|Set property|Listen property changes
 ----|----|-------------|------------|-----------------------
-text| `String` | "" | |  
-visibility| `Int` | 0 | |  
-textColor| `Int` | 0 | |  
-checked| `Boolean` | false | |  
-timePickerHour| `Int` | 0 | |  
-timePickerMinute| `Int` | 0 | | 
-imageResource| `Int` | 0 | |  
-imageDrawable| `Drawable?` | null | |  
-backgroundResource| `Int` | 0 | |  
-backgroundColor| `Int` | 0 | |  
-backgroundDrawable| `Drawable?` | null | | 
+text| `String` | "" | if(text != $field) setText($field) |  
+visibility| `Int` | 0 | visibility = $field |  
+textColor| `Int` | 0 | setTextColor($field) |  
+checked| `Boolean` | false | isChecked = $field |  
+timePickerHour| `Int` | 0 | hour = $field |  
+timePickerMinute| `Int` | 0 | minute = $field | 
+imageResource| `Int` | 0 | setImageResource($field) |  
+imageDrawable| `Drawable?` | null | setImageDrawable($field) |  
+backgroundResource| `Int` | 0 | setBackgroundResource($field) |  
+backgroundColor| `Int` | 0 | setBackgroundColor($field) |  
+backgroundDrawable| `Drawable?` | null | setBackground($field) | 
+radioSelect| `Int?` | null | if ($field != null) check($field) else clearCheck() |
+
+
+##### Specify types by delegate
+
+If you have 
 
 ### List fields
-To specify list 
+
+> :warning: _IN PROGRESS_
 
 ### Read/write modes
 Read-write modes differ in the following parameters: 

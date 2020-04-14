@@ -32,13 +32,13 @@ fun CollectionViewField.validateCorrectSetup(): Boolean {
 
 fun CollectionViewField.getModelType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
     if (!checkIsVoid { delegateClass }) return typeMapping[(safeGetType { delegateClass } as? ClassName)?.canonicalName]?.externalModelType
-            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { elementType }}")
+            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { delegateClass }}")
     return safeGetType { elementType }
 }
 
 fun CollectionViewField.getAdapterViewType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
     if (!checkIsVoid { delegateClass }) return typeMapping[(safeGetType { delegateClass } as? ClassName)?.canonicalName]?.generateViewType
-            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { elementType }}")
+            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { delegateClass }}")
     return safeGetType { viewForElementClass }
 }
 

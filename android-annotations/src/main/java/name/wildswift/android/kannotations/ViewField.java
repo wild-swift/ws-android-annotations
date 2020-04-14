@@ -29,15 +29,21 @@ public @interface ViewField {
     // common properties
     String name();
 
-    ViewProperty property() default ViewProperty.none;
+    // Type
+    Class byDelegate() default Void.class;
 
-    Class type() default Object.class;
+    ViewProperty byProperty() default ViewProperty.none;
+
+    Class type() default Void.class;
     String defaultValue() default "";
-
     String childPropertyName() default "";
-
     String childPropertySetter() default "";
 
+    String childPropertyListener() default "";
+
+    String childPropertyListenerParams() default "newValue";
+
+    //
     ReadWriteMode rwType() default ReadWriteMode.Field;
 
     // change child properties
