@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package name.wildswift.testapp
+package name.wildswift.testapp.readwrite
 
 import android.widget.LinearLayout
 import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
+import name.wildswift.testapp.IdRNames
 
 /**
  * Created by swift

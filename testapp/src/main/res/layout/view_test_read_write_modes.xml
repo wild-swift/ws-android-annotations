@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
@@ -70,4 +70,4 @@
         android:text="Auto fill"
         android:id="@+id/vtrwmButton" />
     <!--</merge>-->
-</LinearLayout>
+</merge>
