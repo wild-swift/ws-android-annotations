@@ -24,7 +24,6 @@ import name.wildswift.android.kanprocessor.utils.*
 import java.lang.ref.WeakReference
 
 object ListAdapterGenerator {
-
     fun buildOldAdapterClass(collectionField: CollectionViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
         return TypeSpec
                 .classBuilder(collectionField.name.capitalize() + "Adapter")
