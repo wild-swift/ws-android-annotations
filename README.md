@@ -113,15 +113,12 @@ radioSelect| `Int?` | null | if ($field != null) check($field) else clearCheck()
 
 
 ##### Specify types by delegate
-
 > :warning: _IN PROGRESS_
 
 ##### Direct types specification
-
 > :warning: _IN PROGRESS_
 
 ### List fields
-
 > :warning: _IN PROGRESS_
 
 ### Read/write modes
