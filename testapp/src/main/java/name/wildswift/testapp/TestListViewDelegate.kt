@@ -29,7 +29,7 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
         parent = LinearLayout::class
 )
 @CollectionsFields(
-        CollectionViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, delegateClass = TestViewDelegate::class),
+        CollectionViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, byDelegate = TestViewDelegate::class),
         CollectionViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
 )
 class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, TestListViewIntState>(view) {

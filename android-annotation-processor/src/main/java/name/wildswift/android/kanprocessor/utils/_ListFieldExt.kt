@@ -25,25 +25,25 @@ import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGeneratio
  * Created by swift
  */
 fun CollectionViewField.validateCorrectSetup(): Boolean {
-    if (childListView.isNotEmpty() && checkIsVoid { delegateClass } && checkIsVoid { elementType }) return false
+    if (childListView.isNotEmpty() && checkIsVoid { byDelegate } && checkIsVoid { elementType }) return false
 
     return true
 }
 
 fun CollectionViewField.getModelType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
-    if (!checkIsVoid { delegateClass }) return typeMapping[(safeGetType { delegateClass } as? ClassName)?.canonicalName]?.externalModelType
-            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { delegateClass }}")
+    if (!checkIsVoid { byDelegate }) return typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
+            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
     return safeGetType { elementType }
 }
 
 fun CollectionViewField.getAdapterViewType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
-    if (!checkIsVoid { delegateClass }) return typeMapping[(safeGetType { delegateClass } as? ClassName)?.canonicalName]?.generateViewType
-            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { delegateClass }}")
+    if (!checkIsVoid { byDelegate }) return typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.generateViewType
+            ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
     return safeGetType { viewForElementClass }
 }
 
 fun CollectionViewField.buildSetViewModelStatement(typeMapping: Map<String, ViewWithDelegateGenerationData>, value: String): String {
-    if (!checkIsVoid { delegateClass }) return "viewModel·=·$value"
+    if (!checkIsVoid { byDelegate }) return "viewModel·=·$value"
     if (modelSetterName.isNotEmpty()) return "$modelSetterName($value)"
     return "$modelFieldName·=·$value"
 }

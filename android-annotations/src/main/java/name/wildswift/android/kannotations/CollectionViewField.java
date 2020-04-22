@@ -35,14 +35,13 @@ public @interface CollectionViewField {
     ListImplementation listImplementation() default ListImplementation.RecyclerView;
 
     // Typing
-    Class delegateClass() default Void.class;
+    Class byDelegate() default Void.class;
+
+    ViewProperty byProperty() default ViewProperty.none;
 
     Class elementType() default Void.class;
-
     Class<? extends View> viewForElementClass() default View.class;
-
     String modelFieldName() default "viewModel";
-
     String modelSetterName() default "";
 
 }
