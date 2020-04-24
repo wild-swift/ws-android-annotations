@@ -45,5 +45,4 @@ public @interface CollectionViewField {
     String modelSetterName() default "";
 
     ViewEvent[] elementEvents() default {};
-
 }
