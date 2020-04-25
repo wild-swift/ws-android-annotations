@@ -19,17 +19,18 @@ package name.wildswift.testapp
 import android.widget.LinearLayout
 import android.widget.LinearLayout.VERTICAL
 import android.widget.TextView
-import name.wildswift.android.kannotations.CollectionViewField
-import name.wildswift.android.kannotations.CollectionsFields
-import name.wildswift.android.kannotations.ListImplementation
-import name.wildswift.android.kannotations.ViewWithDelegate
+import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 
 @ViewWithDelegate(
         parent = LinearLayout::class
 )
 @CollectionsFields(
-        CollectionViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, byDelegate = TestViewDelegate::class),
+        CollectionViewField(name = "subList1", childListView = IdRNames.vtlList, listImplementation = ListImplementation.ListView, byDelegate = TestViewDelegate::class,
+                elementEvents = [
+                    ViewEvent(name = "onItemLabelClick", listenerName = "onLabelClick")
+                ]
+        ),
         CollectionViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
 )
 class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, TestListViewIntState>(view) {
