@@ -18,7 +18,6 @@ package name.wildswift.testapp
 
 import android.widget.LinearLayout
 import android.widget.LinearLayout.VERTICAL
-import android.widget.TextView
 import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 
@@ -30,8 +29,8 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
                 elementEvents = [
                     ViewEvent(name = "onItemLabelClick", listenerName = "onLabelClick")
                 ]
-        ),
-        CollectionViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
+        )
+//        CollectionViewField(name = "subList2", childListView = IdRNames.vtlRecyclerView, elementType = String::class, viewForElementClass = TextView::class, modelFieldName = "text")
 )
 class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, TestListViewIntState>(view) {
     override fun setupView() {
