@@ -37,6 +37,9 @@ object ListAdapterGenerator {
                 .addProperty(PropertySpec.builder("context", contextClass, KModifier.PRIVATE).initializer("context").build())
                 .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
                 .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(collectionField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
+                .addProperties(collectionField.elementEvents.map {
+                    PropertySpec.builder(it.name, LambdaTypeName.get(null, listOf(ParameterSpec.unnamed(collectionField.getModelType(processingTypeMap))), UNIT).copy(nullable = true)).initializer("null").build()
+                })
                 .superclass(baseAdapterClass)
                 .addSuperinterface(itemsObserverClass)
                 .addFunction(
@@ -49,6 +52,20 @@ object ListAdapterGenerator {
                                 .addStatement("val view = reuse as? %1T ?:·%1T(context).apply·{·createdViews·=·createdViews.filter·{·it.get()·!=·null·}·+·%2T(this)·}", collectionField.getAdapterViewType(processingTypeMap), WeakReference::class.asTypeName())
                                 .addStatement("view.${collectionField.buildSetViewModelStatement(processingTypeMap, "values[index]")}")
                                 .addStatement("view.tag = index")
+                                .also { builder ->
+                                    collectionField.elementEvents
+                                            .map {
+                                                CodeBlock.of("""
+                                            |view.${it.listenerName} = {
+                                            |    ${it.name}?.invoke(values[index])
+                                            |}
+                                            |
+                                        """.trimMargin())
+                                            }
+                                            .forEach {
+                                                builder.addCode(it)
+                                            }
+                                }
                                 .addStatement("return view")
                                 .build()
                 )
