@@ -135,7 +135,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                             defaultValueClass
                     )
                 }
-                .plus(data.collectionFields.filter { it.isPublic }.map {
+                .plus(data.collectionFields.filter { it.rwType.public }.map {
                     PropertyData(
                             it.name,
                             itemsDSClass.parameterizedBy(it.getModelType(processingTypeMap)),
@@ -156,7 +156,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                             defaultValueClass
                     )
                 }
-                .plus(data.collectionFields.filter { it.isPublic }.map {
+                .plus(data.collectionFields.filter { it.rwType.public }.map {
                     PropertyData(
                             it.name,
                             itemsDSClass.parameterizedBy(it.getModelType(processingTypeMap)),
@@ -177,7 +177,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                             buildRecyclerAdapterClass(listField, processingTypeMap)
                         }
                     }
-                    ListFieldGenerationData(listField.name, listField.listImplementation, listField.childListView, adapter)
+                    ListFieldGenerationData(listField.name, listField.listImplementation, listField.childName, adapter)
                 }
 
         val publicModelClass = if (data.rootAnnotation.generateViewDataObject) generateDataClass(data.externalModelType, publicModelProperties, generationPath) else null
@@ -413,12 +413,9 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .builder(data.generateViewType.packageName, data.generateViewType.simpleNames.first())
                 .addImport(envConstants.appId, "R")
                 .addImport(viewClass, "inflate")
-                .addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.collectionFields.mapNotNull { it.childListView.takeIf { it.isNotBlank() } })
+                .addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.collectionFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
                 .addImport("name.wildswift.android.kannotations.util", "put")
                 .addType(viewClassSpec.build())
-                .addComment("""
-                    |
-                """.trimMargin())
                 .build()
                 .writeTo(generationPath)
 

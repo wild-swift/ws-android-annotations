@@ -25,7 +25,7 @@ import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGeneratio
  * Created by swift
  */
 fun CollectionViewField.validateCorrectSetup(): Boolean {
-    if (childListView.isNotEmpty() && checkIsVoid { byDelegate } && checkIsVoid { elementType }) return false
+    if (childName.isNotEmpty() && checkIsVoid { byDelegate } && checkIsVoid { type }) return false
 
     return true
 }
@@ -33,7 +33,7 @@ fun CollectionViewField.validateCorrectSetup(): Boolean {
 fun CollectionViewField.getModelType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
     if (!checkIsVoid { byDelegate }) return typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
             ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
-    return safeGetType { elementType }
+    return safeGetType { type }
 }
 
 fun CollectionViewField.getAdapterViewType(typeMapping: Map<String, ViewWithDelegateGenerationData>): TypeName {
@@ -44,6 +44,6 @@ fun CollectionViewField.getAdapterViewType(typeMapping: Map<String, ViewWithDele
 
 fun CollectionViewField.buildSetViewModelStatement(typeMapping: Map<String, ViewWithDelegateGenerationData>, value: String): String {
     if (!checkIsVoid { byDelegate }) return "viewModel·=·$value"
-    if (modelSetterName.isNotEmpty()) return "$modelSetterName($value)"
-    return "$modelFieldName·=·$value"
+    if (childPropertySetter.isNotEmpty()) return "$childPropertySetter($value)"
+    return "${childPropertyName}·=·$value"
 }

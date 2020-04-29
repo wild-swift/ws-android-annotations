@@ -126,7 +126,7 @@ object ModelPropertyGenerator {
                 }
 
         val listFields = data.collectionFields
-                .filter { it.isPublic }
+                .filter { it.rwType.public }
                 .map { field ->
                     val fieldType = itemsDSClass.parameterizedBy(field.getModelType(processingTypeMap))
                     val fieldProperty = PropertySpec

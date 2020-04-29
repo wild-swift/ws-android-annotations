@@ -16,45 +16,20 @@
 
 package name.wildswift.android.kannotations;
 
-import android.view.View;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Created by swift
+ */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface CollectionViewField {
+public @interface ListEvent {
     String name();
 
-    // Type
-    Class byDelegate() default Void.class;
+    ViewListener listener() default ViewListener.none;
 
-    ViewProperty byProperty() default ViewProperty.none;
-
-    Class type() default Void.class;
-
-    String defaultValue() default "";
-
-    String childPropertyName() default "";
-
-    String childPropertySetter() default "";
-
-    String childPropertyListener() default "";
-
-    String childPropertyListenerParams() default "newValue";
-
-    //
-    ReadWriteMode rwType() default ReadWriteMode.Field;
-
-    // change child properties
-    String childName() default "";
-
-    ListImplementation listImplementation() default ListImplementation.RecyclerView;
-    Class<? extends View> viewForElementClass() default View.class;
-
-    boolean activeChild() default false;
-
-    ListEvent[] elementEvents() default {};
+    String listenerName() default "";
 }
