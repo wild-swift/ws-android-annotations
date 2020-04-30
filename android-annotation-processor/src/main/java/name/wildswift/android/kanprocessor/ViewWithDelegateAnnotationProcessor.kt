@@ -278,6 +278,17 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     }
         }
 
+        viewClassSpec
+                .addProperties(data.collectionFields.flatMap { collectionField ->
+                    collectionField
+                            .elementEvents
+                            .map {
+                                PropertySpec.builder(it.name, LambdaTypeName.get(null, listOf(ParameterSpec.unnamed(collectionField.getModelType(processingTypeMap))), UNIT).copy(nullable = true)).initializer("null").build()
+                            }
+
+                }
+                )
+
         viewClassSpec.addInitializerBlock(
                 CodeBlock.builder()
                         .addStatement("inflate(context, R.layout.${data.layoutName}, this)")
@@ -418,7 +429,6 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addType(viewClassSpec.build())
                 .build()
                 .writeTo(generationPath)
-
     }
 
 

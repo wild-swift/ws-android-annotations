@@ -27,7 +27,7 @@ object ListAdapterGenerator {
     fun buildOldAdapterClass(collectionField: CollectionViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
         return TypeSpec
                 .classBuilder(collectionField.name.capitalize() + "Adapter")
-                .addModifiers(KModifier.PRIVATE)
+                .addModifiers(KModifier.PRIVATE, KModifier.INNER)
                 .primaryConstructor(
                         FunSpec.constructorBuilder()
                                 .addParameter(ParameterSpec.builder("context", contextClass).build())
@@ -37,9 +37,6 @@ object ListAdapterGenerator {
                 .addProperty(PropertySpec.builder("context", contextClass, KModifier.PRIVATE).initializer("context").build())
                 .addProperty(PropertySpec.builder("values", itemsDSClass.parameterizedBy(collectionField.getModelType(processingTypeMap)), KModifier.PRIVATE).initializer("values").build())
                 .addProperty(PropertySpec.builder("createdViews", LIST.parameterizedBy(WeakReference::class.asTypeName().parameterizedBy(collectionField.getAdapterViewType(processingTypeMap))), KModifier.PRIVATE).initializer("listOf()").mutable().build())
-                .addProperties(collectionField.elementEvents.map {
-                    PropertySpec.builder(it.name, LambdaTypeName.get(null, listOf(ParameterSpec.unnamed(collectionField.getModelType(processingTypeMap))), UNIT).copy(nullable = true)).initializer("null").build()
-                })
                 .superclass(baseAdapterClass)
                 .addSuperinterface(itemsObserverClass)
                 .addFunction(
