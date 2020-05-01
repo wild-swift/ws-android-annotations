@@ -51,17 +51,8 @@ object ListAdapterGenerator {
                                 .addStatement("view.tag = index")
                                 .also { builder ->
                                     collectionField.elementEvents
-                                            .map {
-                                                CodeBlock.of("""
-                                            |view.${it.listenerName} = {
-                                            |    ${it.name}?.invoke(values[index])
-                                            |}
-                                            |
-                                        """.trimMargin())
-                                            }
-                                            .forEach {
-                                                builder.addCode(it)
-                                            }
+                                            .map { CodeBlock.of("view.${it.resolveListener("${it.name}?.invoke(values[view.tag as? Int ?: 0])")}") }
+                                            .forEach { builder.addCode(it) }
                                 }
                                 .addStatement("return view")
                                 .build()
@@ -140,7 +131,7 @@ object ListAdapterGenerator {
     fun buildRecyclerAdapterClass(collectionField: CollectionViewField, processingTypeMap: Map<String, ViewWithDelegateGenerationData>): TypeSpec {
         return TypeSpec
                 .classBuilder(collectionField.name.capitalize() + "Adapter")
-                .addModifiers(KModifier.PRIVATE)
+                .addModifiers(KModifier.PRIVATE, KModifier.INNER)
                 .superclass(recyclerAdapterClass.parameterizedBy(recyclerHolderClass))
                 .addSuperinterface(itemsObserverClass)
                 .primaryConstructor(
@@ -158,7 +149,17 @@ object ListAdapterGenerator {
                                 .addParameter(ParameterSpec.builder("parent", viewGroupClass).build())
                                 .addParameter(ParameterSpec.builder("viewType", INT).build())
                                 .returns(recyclerHolderClass)
-                                .addStatement("return object : %T(%T(context)) {}", recyclerHolderClass, collectionField.getAdapterViewType(processingTypeMap))
+                                .addCode(CodeBlock.builder()
+                                        .add("return object : %T(%T(context)\n", recyclerHolderClass, collectionField.getAdapterViewType(processingTypeMap))
+                                        .beginControlFlow(".also { view ->")
+                                        .also { builder ->
+                                            collectionField.elementEvents
+                                                    .map { CodeBlock.of("view.${it.resolveListener("${it.name}?.invoke(values[view.tag as? Int ?: 0])")}") }
+                                                    .forEach { builder.add(it) }
+                                        }
+                                        .endControlFlow()
+                                        .add(") {}")
+                                        .build())
                                 .build()
                 )
                 .addFunction(
@@ -179,15 +180,6 @@ object ListAdapterGenerator {
                                 .addStatement("return values.size")
                                 .build()
                 )
-                /*
-                *     override fun unregisterAdapterDataObserver(observer: RecyclerView.AdapterDataObserver) {
-      super.unregisterAdapterDataObserver(observer)
-    }
-
-    override fun registerAdapterDataObserver(observer: RecyclerView.AdapterDataObserver) {
-      super.registerAdapterDataObserver(observer)
-    }
-*/
                 .addFunction(
                         FunSpec.builder("registerAdapterDataObserver")
                                 .addModifiers(KModifier.OVERRIDE)

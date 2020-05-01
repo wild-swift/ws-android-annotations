@@ -31,7 +31,11 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
                     ListEvent(name = "onItemLabelClick", listenerName = "onLabelClick")
                 ]
         ),
-        CollectionViewField(name = "subList2", childName = IdRNames.vtlRecyclerView, type = String::class, viewForElementClass = TextView::class, childPropertyName = "text")
+        CollectionViewField(name = "subList2", childName = IdRNames.vtlRecyclerView, type = String::class, viewForElementClass = TextView::class, childPropertyName = "text",
+                elementEvents = [
+                    ListEvent(name = "onItemClick", listener = ViewListener.onClick)
+                ]
+        )
 )
 class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, TestListViewIntState>(view) {
     override fun setupView() {
