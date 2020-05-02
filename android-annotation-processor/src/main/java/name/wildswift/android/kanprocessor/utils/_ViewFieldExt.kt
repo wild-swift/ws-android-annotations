@@ -88,7 +88,7 @@ fun ViewField.resolveSetter(field: String) =
             byProperty == ViewProperty.backgroundColor -> "setBackgroundColor($field)"
             byProperty == ViewProperty.backgroundDrawable -> "setBackground($field)"
             byProperty == ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
-            checkIsVoid { byDelegate } -> "viewModel = $field"
+            !checkIsVoid { byDelegate } -> "viewModel = $field"
             childPropertyName.isNotEmpty() -> "$childPropertyName = $field"
             else -> "$childPropertySetter($field)"
         }
