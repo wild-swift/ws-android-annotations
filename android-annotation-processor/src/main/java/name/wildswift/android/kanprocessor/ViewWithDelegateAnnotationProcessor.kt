@@ -283,7 +283,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                     collectionField
                             .elementEvents
                             .map {
-                                PropertySpec.builder(it.name, LambdaTypeName.get(null, listOf(ParameterSpec.unnamed(collectionField.getModelType(processingTypeMap))), UNIT).copy(nullable = true)).initializer("null").build()
+                                PropertySpec.builder(it.name, LambdaTypeName.get(null, listOf(ParameterSpec.unnamed(collectionField.getModelType(processingTypeMap))), UNIT).copy(nullable = true)).mutable().initializer("null").build()
                             }
 
                 }
