@@ -116,6 +116,8 @@ radioSelect| `Int?` | null | if ($field != null) check($field) else clearCheck()
 > :warning: _IN PROGRESS_
 
 ##### Direct types specification
+
+For full custom specification you need to set the next properties:  
 > :warning: _IN PROGRESS_
 
 ### List fields
