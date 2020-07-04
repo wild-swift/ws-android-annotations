@@ -27,13 +27,13 @@ private object UNINITIALIZED_VALUE
 
 @Suppress("UNCHECKED_CAST")
 class ExtrasFieldLoader<T, out U>(private val loader: T.() -> U) : ReadOnlyProperty<T, U> {
-    private var value: Any = UNINITIALIZED_VALUE
+    private var value: Any? = UNINITIALIZED_VALUE
     private var lastThis: WeakReference<T?> = WeakReference(null)
 
 
     override fun getValue(thisRef: T, property: KProperty<*>): U {
         if (value === UNINITIALIZED_VALUE || thisRef != lastThis.get()) {
-            value = thisRef.loader()!!
+            value = thisRef.loader()
             lastThis = WeakReference(thisRef)
         }
         return value as U
