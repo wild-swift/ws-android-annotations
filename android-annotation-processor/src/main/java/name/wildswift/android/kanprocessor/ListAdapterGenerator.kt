@@ -152,6 +152,7 @@ object ListAdapterGenerator {
                                 .addCode(CodeBlock.builder()
                                         .add("return object : %T(%T(context)\n", recyclerHolderClass, collectionField.getAdapterViewType(processingTypeMap))
                                         .beginControlFlow(".also { view ->")
+                                        .addStatement("createdViews += %T(view)", WeakReference::class.asTypeName())
                                         .also { builder ->
                                             collectionField.elementEvents
                                                     .map { CodeBlock.of("view.${it.resolveListener("${it.name}?.invoke(values[view.tag as? Int ?: 0])")}") }
