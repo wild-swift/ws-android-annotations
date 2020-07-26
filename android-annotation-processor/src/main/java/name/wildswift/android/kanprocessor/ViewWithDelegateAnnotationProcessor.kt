@@ -430,7 +430,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .addImport(viewClass, "inflate")
                 .also {
                     if (data.layoutName.isNotEmpty()) {
-                        it.addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.collectionFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
+                        it.addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() && it != "this" } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() && it != "this" } } + data.collectionFields.mapNotNull { it.childName.takeIf { it.isNotBlank() && it != "this" } })
                     }
                 }
                 .addImport("name.wildswift.android.kannotations.util", "put")
