@@ -30,6 +30,8 @@ public @interface ViewWithDelegate {
 
     Class parent();
 
+    boolean haveChild() default true;
+
     String layoutResourceName() default "";
 
     boolean saveInstanceState() default true;

@@ -291,7 +291,11 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
 
         viewClassSpec.addInitializerBlock(
                 CodeBlock.builder()
-                        .addStatement("inflate(context, R.layout.${data.layoutName}, this)")
+                        .also {
+                            if (data.layoutName.isNotEmpty()) {
+                                it.addStatement("inflate(context, R.layout.${data.layoutName}, this)")
+                            }
+                        }
                         .addStatement("%1N.setupView()", delegateProperty)
                         .also { codeBlockBuilder ->
                             data.events.forEach { event ->
@@ -424,7 +428,11 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .builder(data.generateViewType.packageName, data.generateViewType.simpleNames.first())
                 .addImport(envConstants.appId, "R")
                 .addImport(viewClass, "inflate")
-                .addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.collectionFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
+                .also {
+                    if (data.layoutName.isNotEmpty()) {
+                        it.addImport("kotlinx.android.synthetic.main.${data.layoutName}.view", data.basicFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.events.mapNotNull { it.childName.takeIf { it.isNotBlank() } } + data.collectionFields.mapNotNull { it.childName.takeIf { it.isNotBlank() } })
+                    }
+                }
                 .addImport("name.wildswift.android.kannotations.util", "put")
                 .addType(viewClassSpec.build())
                 .build()

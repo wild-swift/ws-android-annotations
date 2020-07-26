@@ -56,8 +56,8 @@ data class ViewWithDelegateGenerationData(
                     ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
                     ?: throw IllegalArgumentException("Class name must be specified or delegate must ends with 'Delegate' suffix. Class $packageName.$className")
 
-            val layoutName = metadata.layoutResourceName.takeIf { it.isNotEmpty() }
-                    ?: viewClassName.toViewResourceName()
+            val layoutName = if (metadata.haveChild) metadata.layoutResourceName.takeIf { it.isNotEmpty() }
+                    ?: viewClassName.toViewResourceName() else ""
 
             if (fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $packageName.$className")
             if (events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Events not configured properly for class $packageName.$className")
