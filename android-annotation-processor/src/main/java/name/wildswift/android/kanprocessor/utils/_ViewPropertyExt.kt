@@ -37,6 +37,7 @@ fun ViewProperty.getDefaultValue() = when (this) {
     ViewProperty.backgroundDrawable -> "null"
     ViewProperty.radioSelect -> "null"
     ViewProperty.alpha -> "1.0f"
+    ViewProperty.enable -> "true"
 }
 
 fun ViewProperty.getListenerGroup() = when (this) {
@@ -54,6 +55,7 @@ fun ViewProperty.getListenerGroup() = when (this) {
     ViewProperty.backgroundColor -> arrayOf()
     ViewProperty.backgroundDrawable -> arrayOf()
     ViewProperty.alpha -> arrayOf()
+    ViewProperty.enable -> arrayOf()
 }
 
 // TODO make more pretty

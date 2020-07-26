@@ -34,19 +34,20 @@ fun ViewField.validateCorrectSetup(): Boolean {
 
 fun ViewField.resolveType(typeMapping: Map<String, ViewWithDelegateGenerationData>) =
         when {
-            byProperty == ViewProperty.text -> String::class.asTypeName()
-            byProperty == ViewProperty.visibility -> Int::class.asTypeName()
-            byProperty == ViewProperty.textColor -> Int::class.asTypeName()
-            byProperty == ViewProperty.checked -> Boolean::class.asTypeName()
-            byProperty == ViewProperty.timePickerHour -> Int::class.asTypeName()
-            byProperty == ViewProperty.timePickerMinute -> Int::class.asTypeName()
-            byProperty == ViewProperty.imageResource -> Int::class.asTypeName()
+            byProperty == ViewProperty.text -> STRING
+            byProperty == ViewProperty.visibility -> INT
+            byProperty == ViewProperty.textColor -> INT
+            byProperty == ViewProperty.checked -> BOOLEAN
+            byProperty == ViewProperty.timePickerHour -> INT
+            byProperty == ViewProperty.timePickerMinute -> INT
+            byProperty == ViewProperty.imageResource -> INT
             byProperty == ViewProperty.imageDrawable -> drawableClass.copy(nullable = true)
-            byProperty == ViewProperty.backgroundResource -> Int::class.asTypeName()
-            byProperty == ViewProperty.backgroundColor -> Int::class.asTypeName()
+            byProperty == ViewProperty.backgroundResource -> INT
+            byProperty == ViewProperty.backgroundColor -> INT
             byProperty == ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
             byProperty == ViewProperty.radioSelect -> INT.copy(nullable = true)
             byProperty == ViewProperty.alpha -> FLOAT
+            byProperty == ViewProperty.enable -> BOOLEAN
             !checkIsVoid { byDelegate } -> typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
                     ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
             else -> safeGetType { type }
@@ -87,6 +88,7 @@ fun ViewField.resolveSetter(field: String) =
             byProperty == ViewProperty.backgroundDrawable -> "setBackground($field)"
             byProperty == ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
             byProperty == ViewProperty.alpha -> "alpha = $field"
+            byProperty == ViewProperty.enable -> "isEnabled = $field"
             !checkIsVoid { byDelegate } -> "viewModel = $field"
             childPropertyName.isNotEmpty() -> "$childPropertyName = $field"
             else -> "$childPropertySetter($field)"

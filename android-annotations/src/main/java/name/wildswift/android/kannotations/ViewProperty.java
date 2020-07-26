@@ -21,5 +21,5 @@ package name.wildswift.android.kannotations;
 public enum ViewProperty {
     none, text, visibility, textColor, checked, timePickerHour, timePickerMinute,
     imageResource, imageDrawable, backgroundResource, backgroundColor, backgroundDrawable,
-    radioSelect, alpha
+    radioSelect, alpha, enable
 }
