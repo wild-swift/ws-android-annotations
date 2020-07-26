@@ -40,7 +40,8 @@ import name.wildswift.testapp.IdRNames
         ViewField(name = "backgroundResourceProperty", byProperty = ViewProperty.backgroundResource, childName = IdRNames.vtpBgRes),
         ViewField(name = "backgroundColorProperty", byProperty = ViewProperty.backgroundColor, childName = IdRNames.vtpBgColor),
         ViewField(name = "backgroundDrawableProperty", byProperty = ViewProperty.backgroundDrawable, childName = IdRNames.vtpBgDrawable),
-        ViewField(name = "radioSelectProperty", byProperty = ViewProperty.radioSelect, activeChild = true)
+        ViewField(name = "radioSelectProperty", byProperty = ViewProperty.radioSelect, activeChild = true),
+        ViewField(name = "alphaProperty", byProperty = ViewProperty.alpha, childName = IdRNames.vtpCheck)
 )
 class TestPropertiesViewDelegate(view: TestPropertiesView) : ViewDelegate<TestPropertiesView, TestPropertiesViewIntState>(view) {
     override fun setupView() {

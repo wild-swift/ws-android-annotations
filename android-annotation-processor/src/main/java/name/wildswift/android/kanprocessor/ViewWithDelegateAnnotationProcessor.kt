@@ -22,13 +22,13 @@ import name.wildswift.android.kannotations.ListImplementation
 import name.wildswift.android.kannotations.ViewProperty
 import name.wildswift.android.kannotations.ViewWithDelegate
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
-import name.wildswift.android.kanprocessor.ListAdapterGenerator.buildOldAdapterClass
-import name.wildswift.android.kanprocessor.ListAdapterGenerator.buildRecyclerAdapterClass
 import name.wildswift.android.kanprocessor.datahelpers.ListFieldGenerationData
 import name.wildswift.android.kanprocessor.datahelpers.PropertyData
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
 import name.wildswift.android.kanprocessor.generators.DataClassGenerator.generateDataClass
 import name.wildswift.android.kanprocessor.generators.DelegatedMethodsGenerator.buildDelegatedMethods
+import name.wildswift.android.kanprocessor.generators.ListAdapterGenerator.buildOldAdapterClass
+import name.wildswift.android.kanprocessor.generators.ListAdapterGenerator.buildRecyclerAdapterClass
 import name.wildswift.android.kanprocessor.generators.ModelPropertyGenerator.buildFieldsSpecs
 import name.wildswift.android.kanprocessor.generators.ModelPropertyGenerator.buildListenersSpecs
 import name.wildswift.android.kanprocessor.generators.ModelPropertyGenerator.internalModelProperty

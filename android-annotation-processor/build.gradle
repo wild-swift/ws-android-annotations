@@ -24,13 +24,11 @@ group = 'name.wildswift.android'
 version = publish_version
 
 dependencies {
-    implementation "name.wildswift.android:android-annotations:$dep_version"
-
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:$kotlinx_metadata_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup:kotlinpoet:1.4.4'
-//    implementation project(':android-annotations')
+    implementation project(':android-annotations')
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_7
@@ -74,6 +72,11 @@ publishing {
                         dependencyNode.appendNode('version', it.version)
                     }
                 }
+                // Add local library as published artifact
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', 'name.wildswift.android')
+                dependencyNode.appendNode('artifactId', 'android-annotations')
+                dependencyNode.appendNode('version', dep_version)
             }
         }
     }

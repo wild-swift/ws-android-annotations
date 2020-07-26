@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package name.wildswift.android.kanprocessor
+package name.wildswift.android.kanprocessor.generators
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy

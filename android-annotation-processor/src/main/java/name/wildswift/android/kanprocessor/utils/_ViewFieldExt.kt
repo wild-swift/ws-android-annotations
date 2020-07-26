@@ -16,10 +16,7 @@
 
 package name.wildswift.android.kanprocessor.utils
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.INT
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
@@ -49,6 +46,7 @@ fun ViewField.resolveType(typeMapping: Map<String, ViewWithDelegateGenerationDat
             byProperty == ViewProperty.backgroundColor -> Int::class.asTypeName()
             byProperty == ViewProperty.backgroundDrawable -> drawableClass.copy(nullable = true)
             byProperty == ViewProperty.radioSelect -> INT.copy(nullable = true)
+            byProperty == ViewProperty.alpha -> FLOAT
             !checkIsVoid { byDelegate } -> typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
                     ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
             else -> safeGetType { type }
@@ -88,6 +86,7 @@ fun ViewField.resolveSetter(field: String) =
             byProperty == ViewProperty.backgroundColor -> "setBackgroundColor($field)"
             byProperty == ViewProperty.backgroundDrawable -> "setBackground($field)"
             byProperty == ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
+            byProperty == ViewProperty.alpha -> "alpha = $field"
             !checkIsVoid { byDelegate } -> "viewModel = $field"
             childPropertyName.isNotEmpty() -> "$childPropertyName = $field"
             else -> "$childPropertySetter($field)"
