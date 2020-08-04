@@ -19,6 +19,7 @@ package name.wildswift.testapp
 import android.widget.LinearLayout
 import android.widget.LinearLayout.VERTICAL
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
 
@@ -41,4 +42,7 @@ class TestListViewDelegate(view: TestListView) : ViewDelegate<TestListView, Test
     override fun setupView() {
         view.orientation = VERTICAL
     }
+
+    @WrapAdapter("subList2")
+    fun wrap(input: RecyclerView.Adapter<RecyclerView.ViewHolder>): RecyclerView.Adapter<RecyclerView.ViewHolder> = input
 }

@@ -38,7 +38,8 @@ data class ViewWithDelegateGenerationData(
         val generateViewType: ClassName,
         val internalModelType: ClassName,
         val externalModelType: ClassName,
-        val layoutName: String
+        val layoutName: String,
+        val wrapAdapterMapping: List<Pair<WrapAdapter, ExecutableElement>>
 ) {
     companion object {
         fun from(typeElement: TypeElement, env: ProcessingEnvironment): ViewWithDelegateGenerationData {
@@ -51,6 +52,13 @@ data class ViewWithDelegateGenerationData(
             val listFields = typeElement.getAnnotationsByType(CollectionsFields::class.java).flatMap { it.value.asIterable() } + typeElement.getAnnotationsByType(CollectionViewField::class.java)
             val visibilityModifier = resolveKotlinVisibility(typeElement)
             val delegatedMethods = typeElement.enclosedElements.filter { it.getAnnotation(Delegated::class.java) != null }.filterIsInstance<ExecutableElement>()
+            val wrapAdapterMapping = typeElement.enclosedElements.filterIsInstance<ExecutableElement>().mapNotNull {
+                val annotation = it.getAnnotation(WrapAdapter::class.java)
+                if (annotation != null)
+                    annotation to it
+                else
+                    null
+            }
 
             val viewClassName = metadata.name.takeIf { it.isNotBlank() }
                     ?: className.let { if (it.endsWith("Delegate")) it.substring(0, it.length - "Delegate".length) else null }
@@ -80,7 +88,8 @@ data class ViewWithDelegateGenerationData(
                     generateViewType = generateViewType,
                     internalModelType = internalModelType,
                     externalModelType = externalModelType,
-                    layoutName = layoutName
+                    layoutName = layoutName,
+                    wrapAdapterMapping = wrapAdapterMapping
             )
         }
     }

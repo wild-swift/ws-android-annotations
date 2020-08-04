@@ -49,9 +49,14 @@ object ModelPropertyGenerator {
                                 .apply {
                                     listFieldsGenerationData
                                             .filter { it.childListView.isNotEmpty() }
-                                            .forEach {
+                                            .forEach { listField ->
+                                                val wrapMethod = data.wrapAdapterMapping.find { it.first.value == listField.name }?.second
                                                 // TODO Need use typeName, but this is hard for now
-                                                addStatement("··if·(oldValue.${it.name}·!=·newValue.${it.name})·${it.childListView}.setAdapter(${it.name.capitalize()}Adapter(context,·newValue.${it.name}))")
+                                                if (wrapMethod == null) {
+                                                    addStatement("··if·(oldValue.${listField.name}·!=·newValue.${listField.name})·${listField.childListView}.setAdapter(${listField.name.capitalize()}Adapter(context,·newValue.${listField.name}))")
+                                                } else {
+                                                    addStatement("··if·(oldValue.${listField.name}·!=·newValue.${listField.name})·${listField.childListView}.setAdapter(delegate.${wrapMethod.simpleName}(${listField.name.capitalize()}Adapter(context,·newValue.${listField.name})))")
+                                                }
                                             }
                                 }
                                 .addStatement("%N = false", childrenUpdateProperty)
