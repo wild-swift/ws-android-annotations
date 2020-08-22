@@ -28,8 +28,8 @@ apply plugin: 'kotlin-kapt'
 For usage this library add following dependencies to your build script (_build.gradle_)
 ```groovy
 dependencies {
-    kapt "name.wildswift.android:android-annotation-processor:0.8.2"
-    implementation "name.wildswift.android:android-annotations:0.8.0"
+    kapt "name.wildswift.android:android-annotation-processor:0.8.10"
+    implementation "name.wildswift.android:android-annotations:0.8.10"
 }
 ```
 
