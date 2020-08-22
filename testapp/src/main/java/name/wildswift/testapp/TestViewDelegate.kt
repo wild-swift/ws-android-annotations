@@ -19,6 +19,7 @@ import android.view.View
 import android.widget.FrameLayout
 import name.wildswift.android.kannotations.*
 import name.wildswift.android.kannotations.interfaces.ViewDelegate
+import java.util.*
 
 /**
  * Created by swift
@@ -51,7 +52,10 @@ import name.wildswift.android.kannotations.interfaces.ViewDelegate
         ViewField(name = "longField", type = Long::class),
         ViewField(name = "shortField", type = Short::class),
         ViewField(name = "byteField", type = Byte::class),
-        ViewField(name = "stringField", type = String::class)
+        ViewField(name = "stringField", type = String::class),
+        ViewField(name = "dateField", type = Date::class),
+        ViewField(name = "kotlinEnumField", type = TestEnum1::class),
+        ViewField(name = "javaEnumField", type = TestEnum2::class)
 )
 class TestViewDelegate(view: TestView) : ViewDelegate<TestView, TestViewIntState>(view) {
     override fun setupView() {

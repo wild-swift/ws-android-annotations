@@ -105,7 +105,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
         val internalProperties = data
                 .basicFields
                 .map {
-                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap, processingEnv.elementUtils)
                     PropertyData(
                             it.name,
                             it.resolveType(processingTypeMap),
@@ -127,7 +127,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .basicFields
                 .filter { it.rwType.public }
                 .map {
-                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap, processingEnv.elementUtils)
                     PropertyData(
                             it.name,
                             it.resolveType(processingTypeMap),
@@ -148,7 +148,7 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                 .basicFields
                 .filter { it.rwType.mutablePublic }
                 .map {
-                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap)
+                    val (defaultValuePattern, defaultValueClass) = it.resolveDefaultValue(processingTypeMap, processingEnv.elementUtils)
                     PropertyData(
                             it.name,
                             it.resolveType(processingTypeMap),

@@ -67,7 +67,7 @@ data class ViewWithDelegateGenerationData(
             val layoutName = if (metadata.haveChild) metadata.layoutResourceName.takeIf { it.isNotEmpty() }
                     ?: viewClassName.toViewResourceName() else ""
 
-            if (fields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Fields not configured properly for class $packageName.$className")
+            if (fields.any { !it.validateCorrectSetup(env.elementUtils) }) throw IllegalArgumentException("Fields not configured properly for class $packageName.$className")
             if (events.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("Events not configured properly for class $packageName.$className")
             if (listFields.any { !it.validateCorrectSetup() }) throw IllegalArgumentException("List fields not configured properly for class $packageName.$className")
 

@@ -20,13 +20,16 @@ import com.squareup.kotlinpoet.*
 import name.wildswift.android.kannotations.ViewField
 import name.wildswift.android.kannotations.ViewProperty
 import name.wildswift.android.kanprocessor.datahelpers.ViewWithDelegateGenerationData
+import java.util.*
+import javax.lang.model.element.ElementKind
+import javax.lang.model.util.Elements
 
 /**
  * Created by swift
  */
-fun ViewField.validateCorrectSetup(): Boolean {
+fun ViewField.validateCorrectSetup(elements: Elements): Boolean {
     if (byProperty == ViewProperty.none && checkIsVoid { type } && checkIsVoid { byDelegate }) return false
-    if (checkIsVoid { byDelegate } && (resolveDefaultValue(mapOf()).first).isEmpty()) return false
+    if (checkIsVoid { byDelegate } && (resolveDefaultValue(mapOf(), elements).first).isEmpty()) return false
     if (byProperty == ViewProperty.none && checkIsVoid { byDelegate } && childName.isNotEmpty() && childPropertyName.isEmpty() && childPropertySetter.isEmpty()) return false
 
     return true
@@ -53,13 +56,22 @@ fun ViewField.resolveType(typeMapping: Map<String, ViewWithDelegateGenerationDat
             else -> safeGetType { type }
         }
 
-fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGenerationData>): Pair<String, TypeName?> {
+fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGenerationData>, elements: Elements): Pair<String, TypeName?> {
     if (byProperty != ViewProperty.none) return byProperty.getDefaultValue() to null
     if (!checkIsVoid { byDelegate }) return "%T()" to (typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
             ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}"))
     if (defaultValue.isNotBlank()) return defaultValue to null
     val type = safeGetType { type }
     if (type !is ClassName) return defaultValue to null
+    val typeElement = elements.getTypeElement(type.canonicalName)
+    if (typeElement?.kind == ElementKind.ENUM) {
+        typeElement.enclosedElements
+                .firstOrNull { it.kind == ElementKind.ENUM_CONSTANT }
+                ?.simpleName
+                ?.also {
+                    return "%T.$it" to type
+                }
+    }
     return when (type.canonicalName) {
         Boolean::class.qualifiedName -> "false" to null
         Float::class.qualifiedName -> "0.0f" to null
@@ -69,6 +81,7 @@ fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGener
         Short::class.qualifiedName -> "0" to null
         Byte::class.qualifiedName -> "0" to null
         String::class.qualifiedName -> "\"\"" to null
+        Date::class.qualifiedName -> "%T()" to Date::class.asClassName()
         else -> defaultValue to null
     }
 }
