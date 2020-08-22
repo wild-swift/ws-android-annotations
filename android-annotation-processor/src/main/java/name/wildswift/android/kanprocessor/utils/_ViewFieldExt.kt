@@ -51,13 +51,15 @@ fun ViewField.resolveType(typeMapping: Map<String, ViewWithDelegateGenerationDat
             byProperty == ViewProperty.radioSelect -> INT.copy(nullable = true)
             byProperty == ViewProperty.alpha -> FLOAT
             byProperty == ViewProperty.enable -> BOOLEAN
+            byProperty == ViewProperty.selected -> BOOLEAN
+            byProperty == ViewProperty.elevation -> FLOAT
             !checkIsVoid { byDelegate } -> typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
                     ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}")
             else -> safeGetType { type }
         }
 
 fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGenerationData>, elements: Elements): Pair<String, TypeName?> {
-    if (byProperty != ViewProperty.none) return byProperty.getDefaultValue() to null
+    if (byProperty != ViewProperty.none) return byProperty.getDefaultValue()
     if (!checkIsVoid { byDelegate }) return "%T()" to (typeMapping[(safeGetType { byDelegate } as? ClassName)?.canonicalName]?.externalModelType
             ?: throw IllegalStateException("Can't find model for delegate ${safeGetType { byDelegate }}"))
     if (defaultValue.isNotBlank()) return defaultValue to null
@@ -86,23 +88,25 @@ fun ViewField.resolveDefaultValue(typeMapping: Map<String, ViewWithDelegateGener
     }
 }
 
-fun ViewField.resolveSetter(field: String) =
+fun ViewField.resolveSetter(childName: String, field: String) =
         when {
-            byProperty == ViewProperty.text -> "apply·{·if·(text.toString()·!=·$field)·setText($field)·}"
-            byProperty == ViewProperty.visibility -> "visibility = $field"
-            byProperty == ViewProperty.textColor -> "setTextColor($field)"
-            byProperty == ViewProperty.checked -> "isChecked = $field"
-            byProperty == ViewProperty.timePickerHour -> "hour = $field"
-            byProperty == ViewProperty.timePickerMinute -> "minute = $field"
-            byProperty == ViewProperty.imageResource -> "setImageResource($field)"
-            byProperty == ViewProperty.imageDrawable -> "setImageDrawable($field)"
-            byProperty == ViewProperty.backgroundResource -> "setBackgroundResource($field)"
-            byProperty == ViewProperty.backgroundColor -> "setBackgroundColor($field)"
-            byProperty == ViewProperty.backgroundDrawable -> "setBackground($field)"
-            byProperty == ViewProperty.radioSelect -> "apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
-            byProperty == ViewProperty.alpha -> "alpha = $field"
-            byProperty == ViewProperty.enable -> "isEnabled = $field"
-            !checkIsVoid { byDelegate } -> "viewModel = $field"
-            childPropertyName.isNotEmpty() -> "$childPropertyName = $field"
-            else -> "$childPropertySetter($field)"
+            byProperty == ViewProperty.text -> "$childName.apply·{·if·(text.toString()·!=·$field)·setText($field)·}"
+            byProperty == ViewProperty.visibility -> "$childName.visibility·=·$field"
+            byProperty == ViewProperty.textColor -> "$childName.setTextColor($field)"
+            byProperty == ViewProperty.checked -> "$childName.isChecked·=·$field"
+            byProperty == ViewProperty.timePickerHour -> "$childName.hour·=·$field"
+            byProperty == ViewProperty.timePickerMinute -> "$childName.minute·=·$field"
+            byProperty == ViewProperty.imageResource -> "$childName.setImageResource($field)"
+            byProperty == ViewProperty.imageDrawable -> "$childName.setImageDrawable($field)"
+            byProperty == ViewProperty.backgroundResource -> "$childName.setBackgroundResource($field)"
+            byProperty == ViewProperty.backgroundColor -> "$childName.setBackgroundColor($field)"
+            byProperty == ViewProperty.backgroundDrawable -> "$childName.setBackground($field)"
+            byProperty == ViewProperty.radioSelect -> "$childName.apply·{·if·($field·!=·null)·check($field)·else·clearCheck()·}"
+            byProperty == ViewProperty.alpha -> "$childName.alpha·=·$field"
+            byProperty == ViewProperty.enable -> "$childName.isEnabled·=·$field"
+            byProperty == ViewProperty.selected -> "$childName.isSelected·=·$field"
+            byProperty == ViewProperty.elevation -> "if·(android.os.Build.VERSION.SDK_INT·>=·21)·$childName.elevation·=·$field"
+            !checkIsVoid { byDelegate } -> "$childName.viewModel·=·$field"
+            childPropertyName.isNotEmpty() -> "$childName.$childPropertyName·=·$field"
+            else -> "$childName.$childPropertySetter($field)"
         }

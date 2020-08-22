@@ -43,7 +43,7 @@ object ModelPropertyGenerator {
                                     data.basicFields
                                             .filter { it.childName.isNotEmpty() }
                                             .forEach {
-                                                addStatement("··if·(oldValue.${it.name}·!=·newValue.${it.name})·${it.childName}.${it.resolveSetter("newValue.${it.name}")}")
+                                                addStatement("··if·(oldValue.${it.name}·!=·newValue.${it.name})·${it.resolveSetter(it.childName, "newValue.${it.name}")}")
                                             }
                                 }
                                 .apply {

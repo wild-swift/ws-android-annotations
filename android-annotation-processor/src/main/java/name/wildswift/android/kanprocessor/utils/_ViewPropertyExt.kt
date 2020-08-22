@@ -19,25 +19,27 @@ package name.wildswift.android.kanprocessor.utils
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import name.wildswift.android.kannotations.ViewProperty
 
-fun ViewProperty.getDefaultValue() = when (this) {
-    ViewProperty.none -> ""
-    ViewProperty.text -> "\"\""
-// it is better to use View.VISIBLE, but this is GENERATED CODE!!!
-    ViewProperty.visibility -> "0"
-    ViewProperty.textColor -> "0xFFFFFFFF.toInt()"
-    ViewProperty.checked -> "false"
-    ViewProperty.timePickerHour -> "-1"
-    ViewProperty.timePickerMinute -> "-1"
-    ViewProperty.imageResource -> "0"
-    ViewProperty.imageDrawable -> "null"
-    ViewProperty.backgroundResource -> "0"
-    ViewProperty.backgroundColor -> "0"
-    ViewProperty.backgroundDrawable -> "null"
-    ViewProperty.radioSelect -> "null"
-    ViewProperty.alpha -> "1.0f"
-    ViewProperty.enable -> "true"
+fun ViewProperty.getDefaultValue(): Pair<String, TypeName?> = when (this) {
+    ViewProperty.none -> "" to null
+    ViewProperty.text -> "\"\"" to null
+    ViewProperty.visibility -> "%T.VISIBLE" to viewClass
+    ViewProperty.textColor -> "0xFFFFFFFF.toInt()" to null
+    ViewProperty.checked -> "false" to null
+    ViewProperty.timePickerHour -> "-1" to null
+    ViewProperty.timePickerMinute -> "-1" to null
+    ViewProperty.imageResource -> "0" to null
+    ViewProperty.imageDrawable -> "null" to null
+    ViewProperty.backgroundResource -> "0" to null
+    ViewProperty.backgroundColor -> "0" to null
+    ViewProperty.backgroundDrawable -> "null" to null
+    ViewProperty.radioSelect -> "null" to null
+    ViewProperty.alpha -> "1.0f" to null
+    ViewProperty.enable -> "true" to null
+    ViewProperty.selected -> "false" to null
+    ViewProperty.elevation -> "0.0f" to null
 }
 
 fun ViewProperty.getListenerGroup() = when (this) {
@@ -56,6 +58,8 @@ fun ViewProperty.getListenerGroup() = when (this) {
     ViewProperty.backgroundDrawable -> arrayOf()
     ViewProperty.alpha -> arrayOf()
     ViewProperty.enable -> arrayOf()
+    ViewProperty.selected -> arrayOf()
+    ViewProperty.elevation -> arrayOf()
 }
 
 // TODO make more pretty

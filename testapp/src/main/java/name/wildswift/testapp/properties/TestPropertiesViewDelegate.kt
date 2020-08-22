@@ -42,7 +42,9 @@ import name.wildswift.testapp.IdRNames
         ViewField(name = "backgroundDrawableProperty", byProperty = ViewProperty.backgroundDrawable, childName = IdRNames.vtpBgDrawable),
         ViewField(name = "radioSelectProperty", byProperty = ViewProperty.radioSelect, activeChild = true),
         ViewField(name = "alphaProperty", byProperty = ViewProperty.alpha, childName = IdRNames.vtpCheck),
-        ViewField(name = "enableProperty", byProperty = ViewProperty.enable, childName = "this")
+        ViewField(name = "enableProperty", byProperty = ViewProperty.enable, childName = "this"),
+        ViewField(name = "selectedProperty", byProperty = ViewProperty.selected, childName = "this"),
+        ViewField(name = "elevationProperty", byProperty = ViewProperty.elevation, childName = "this")
 )
 class TestPropertiesViewDelegate(view: TestPropertiesView) : ViewDelegate<TestPropertiesView, TestPropertiesViewIntState>(view) {
     override fun setupView() {
