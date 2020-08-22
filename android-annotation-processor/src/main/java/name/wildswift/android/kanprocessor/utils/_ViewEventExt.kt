@@ -32,6 +32,13 @@ fun ViewEvent.resolveListener(statement: String) =
                     |}
                     |
                 """.trimMargin()
+                ViewListener.onEditorAction -> """
+                    |setOnEditorActionListener { _, _, _ ->
+                    |   $statement
+                    |   true
+                    |}
+                    |
+                """.trimMargin()
             }
         } else {
             """
@@ -43,7 +50,7 @@ fun ViewEvent.resolveListener(statement: String) =
         }
 
 fun ViewEvent.validateCorrectSetup(): Boolean {
-    if (listener == ViewListener.none && listenerName.isEmpty()) return false
+    if (childName.isNotBlank() && listener == ViewListener.none && listenerName.isEmpty()) return false
 
     return true;
 }

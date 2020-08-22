@@ -20,5 +20,5 @@ package name.wildswift.android.kannotations;
  * Created by swift
  */
 public enum ViewListener {
-    none, onClick
+    none, onClick, onEditorAction
 }

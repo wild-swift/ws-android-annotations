@@ -34,7 +34,10 @@ import name.wildswift.testapp.IdRNames
         ViewField(name = "radioSelect", rwType = ReadWriteMode.ObservableField, childName = IdRNames.vtrwmSelector, byProperty = ViewProperty.radioSelect, activeChild = true),
         ViewField(name = "rwText", rwType = ReadWriteMode.FullObservableField, childName = IdRNames.vtrwmRWEditor, byProperty = ViewProperty.text, activeChild = true)
 )
-@ViewEvent(name = "reset", childName = IdRNames.vtrwmButton, listener = ViewListener.onClick)
+@Events(
+        ViewEvent(name = "reset", childName = IdRNames.vtrwmButton, listener = ViewListener.onClick),
+        ViewEvent(name = "editorAction", childName = IdRNames.vtrwmROEditor, listener = ViewListener.onEditorAction)
+)
 class TestReadWriteModesViewDelegate(view: TestReadWriteModesView) : ViewDelegate<TestReadWriteModesView, TestReadWriteModesViewIntState>(view) {
     override fun setupView() {
         view.orientation = LinearLayout.VERTICAL

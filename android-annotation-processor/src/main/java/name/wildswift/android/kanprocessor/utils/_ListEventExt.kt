@@ -32,6 +32,13 @@ fun ListEvent.resolveListener(statement: String) =
                     |}
                     |
                 """.trimMargin()
+                ViewListener.onEditorAction -> """
+                    |setOnEditorActionListener { _, _, _ ->
+                    |   $statement
+                    |   true
+                    |}
+                    |
+                """.trimMargin()
             }
         } else {
             """

@@ -298,9 +298,11 @@ class ViewWithDelegateAnnotationProcessor : KotlinAbstractProcessor() {
                         }
                         .addStatement("%1N.setupView()", delegateProperty)
                         .also { codeBlockBuilder ->
-                            data.events.forEach { event ->
-                                codeBlockBuilder.add(event.childName.let { if (it.isEmpty()) "" else "$it." } + event.resolveListener("${event.name}?.invoke()"))
-                            }
+                            data.events
+                                    .filter { event -> event.childName.isNotBlank() }
+                                    .forEach { event ->
+                                        codeBlockBuilder.add("${event.childName}.${event.resolveListener("${event.name}?.invoke()")}")
+                                    }
                         }
                         .also { codeBlockBuilder ->
                             data.basicFields
