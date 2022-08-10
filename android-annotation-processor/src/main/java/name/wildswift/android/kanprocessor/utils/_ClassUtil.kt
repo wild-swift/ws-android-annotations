@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Wild Swift
+ * Copyright (C) 2022 Wild Swift
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,6 @@ private fun readKotlinMetadata(it: TypeElement): KotlinClassMetadata.Class? {
     val header = KotlinClassHeader(
             kind = kind,
             metadataVersion = metadataVersion,
-            bytecodeVersion = bytecodeVersion,
             data1 = data1,
             data2 = data2,
             extraString = extraString,

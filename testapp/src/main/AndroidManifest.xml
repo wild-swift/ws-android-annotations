@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ Copyright (C) 2020 Wild Swift
+  ~ Copyright (C) 2022 Wild Swift
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@
         android:icon="@drawable/ic_launcher"
         android:label="TestApp"
         android:theme="@android:style/Theme">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,7 +31,8 @@
         </activity>
         <activity
             android:name=".readwrite.ReadWriteTestActivity"
-            android:label="TestReadWrite">
+            android:label="TestReadWrite"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -37,7 +40,8 @@
         </activity>
         <activity
             android:name=".properties.TestPropertiesActivity"
-            android:label="TestProperties">
+            android:label="TestProperties"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
